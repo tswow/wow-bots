@@ -15,4 +15,4 @@ declare function ReadDirRecursive(dir: string): string[]
 declare function IsFile(path: string): boolean
 declare function IsDirectory(path: string): boolean
 declare function WriteFile(path: string, value: string)
-declare function ReadFIle(path: string): string
+declare function ReadFile(path: string): string
