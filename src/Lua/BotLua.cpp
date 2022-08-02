@@ -113,7 +113,7 @@ void BotLua::Reload(BotThread* thread)
     LBot.set_function("GetUsername", &Bot::GetUsername);
     LBot.set_function("GetPassword", &Bot::GetPassword);
 
-    fs::path path = fs::path(sConfigMgr->GetStringDefault("Lua.Path","./")) / "bots";
+    fs::path path = fs::path(sConfigMgr->GetStringDefault("Lua.Path","./")) / "profiles";
 
     if (std::filesystem::exists(path))
     {
