@@ -36,6 +36,7 @@ Bot::Bot(BotThread* thread, std::string const& username, std::string const& pass
 {
     std::transform(m_username.begin(), m_username.end(), m_username.begin(), [](uint8_t c) { return std::toupper(c); });
     std::transform(m_password.begin(), m_password.end(), m_password.begin(), [](uint8_t c) { return std::toupper(c); });
+    FIRE(OnCreate, this->GetEvents(), {}, *this);
 }
 
 std::string const& Bot::GetUsername() const
