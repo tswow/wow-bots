@@ -105,8 +105,9 @@ void BotThread::Reload()
     m_shouldReload = true;
 }
 
-void BotThread::start()
+void BotThread::start(int thread)
 {
+    m_threadId = thread;
     boost::asio::io_context ctx;
     boost::asio::co_spawn(ctx, run(), boost::asio::detached);
     ctx.run();
@@ -167,7 +168,7 @@ void BotMgr::Initialize()
     for (int i = 0; i < threadCount; ++i)
     {
         BotThread* thread = (m_threads[i] = std::make_unique<BotThread>()).get();
-        std::thread(&BotThread::start, thread).detach();
+        std::thread(&BotThread::start, thread, i).detach();
     }
 }
 

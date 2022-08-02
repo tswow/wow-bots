@@ -37,7 +37,7 @@ class BotProfileMgr;
 class BotThread
 {
 public:
-    void start();
+    void start(int thread);
     void Reload();
     BotThread();
     std::unique_ptr<BotProfileMgr> m_events;
