@@ -75,4 +75,17 @@ void BotLuaCommand::Reload()
             }
         }
     }
+
+    m_state.set_function("StartBot", sol::overload(
+        [](std::string const& username, std::string const& password, std::string const& events, std::string const& authserver) {
+            StartBot(username, password, events, authserver);
+        },
+        [](std::string const& username, std::string const& password, std::string const& events) {
+            StartBot(username, password, events);
+        },
+        [](std::string const& username, std::string const& password) {
+            StartBot(username, password);
+        }
+    ));
+    m_state.set_function("StopBot", StopBot);
 }

@@ -17,6 +17,7 @@
 #pragma once
 
 #include "BotSocket.h"
+#include "BotConfig.h"
 #include "BotMain.h"
 
 #include <boost/asio/awaitable.hpp>
@@ -58,8 +59,8 @@ class BotMgr
 {
 public:
     static BotMgr* instance();
-    void AddBot(std::string const& username, std::string const& password, std::string const& events, std::string const& authserver = "127.0.0.1");
-    void RemoveBot(std::string const& username);
+    void StartBot(std::string const& username, std::string const& password, std::string const& events, std::string const& authserver);
+    void StopBot(std::string const& username);
     void Initialize();
     void Reload();
     std::mutex m_botMutex;
@@ -70,3 +71,6 @@ private:
 };
 
 #define sBotMgr BotMgr::instance()
+
+void StartBot(std::string const& username, std::string const& password, std::string const& events = ROOT_EVENT_NAME, std::string const& authserver = "");
+void StopBot(std::string const& username);

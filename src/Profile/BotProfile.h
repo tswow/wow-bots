@@ -20,13 +20,12 @@
 #include "BotAuth.h"
 #include "BotPacket.h"
 #include "BotMutable.h"
+#include "BotConfig.h"
 
 #include <vector>
 #include <map>
 #include <set>
 #include <cstdint>
-
-#define ROOT_EVENT_NAME "tswow:root_events"
 
 class Bot;
 class BotProfileMgr;

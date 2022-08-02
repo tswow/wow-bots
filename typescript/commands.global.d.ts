@@ -11,3 +11,5 @@ declare class BotCommandBuilder {
     SetCallback(callback: (args: BotCommandArguments) => void): void
 }
 declare function CreateCommand(name: string): BotCommandBuilder
+
+declare function StartBot(username: string, password: string, )

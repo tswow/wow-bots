@@ -119,7 +119,7 @@ BotMgr* BotMgr::instance()
     return &mgr;
 }
 
-void BotMgr::AddBot(std::string const& username, std::string const& password, std::string const& events, std::string const& authserver)
+void BotMgr::StartBot(std::string const& username, std::string const& password, std::string const& events, std::string const& authserver)
 {
     std::scoped_lock(m_botMutex);
     auto old = m_bots.find(username);
@@ -150,7 +150,7 @@ void BotMgr::AddBot(std::string const& username, std::string const& password, st
     cur->m_bot_count++;
 }
 
-void BotMgr::RemoveBot(std::string const& username)
+void BotMgr::StopBot(std::string const& username)
 {
     std::scoped_lock(m_botMutex);
     auto bot = m_bots.find(username);
@@ -184,4 +184,21 @@ BotThread::~BotThread()
 {
     // force reset callbacks before we clear the lua state
     m_events->Reset();
+}
+
+void StartBot(std::string const& username, std::string const& password, std::string const& events, std::string const& authserver)
+{
+    sBotMgr->StartBot(
+        username,
+        password,
+        events,
+        authserver.size()
+            ? authserver
+            : sConfigMgr->GetStringDefault("Bots.DefaultAuthServer","127.0.0.1")
+    );
+}
+
+void StopBot(std::string const& username)
+{
+    sBotMgr->StopBot(username);
 }

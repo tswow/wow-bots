@@ -28,8 +28,8 @@ void BotCommandMgr::RegisterBaseCommands()
         std::string EVENTS = "events";
         std::string AUTHSERVER = "authserver";
     
-        CreateCommand("login")
-            .SetDescription("Logs in an account to the game using a specific script")
+        CreateCommand("start")
+            .SetDescription("Starts a bot and logs in to the game")
             .AddStringParam(USERNAME)
             .AddStringParam(PASSWORD)
             .AddStringParam(EVENTS, ROOT_EVENT_NAME)
@@ -39,7 +39,7 @@ void BotCommandMgr::RegisterBaseCommands()
                 std::string password = args.get_string(PASSWORD);
                 std::string events = args.get_string(EVENTS);
                 std::string authserver = args.get_string(AUTHSERVER);
-                sBotMgr->AddBot(username, password, events, authserver);
+                StartBot(username, password, events, authserver);
             })
             ;
     }
