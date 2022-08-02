@@ -71,17 +71,17 @@ declare class RealmInfo {
 declare class WorldAuthResponse {}
 
 declare class BotEvents {
-    OnCreate(callback: (bot: Bot) => void): this;
-    OnAuthChallenge(callback: (bot: Bot, packet: AuthPacket, cancel: BotMutable<boolean>) => void): this
-    OnAuthProof(callback: (bot: Bot, challenge: ServerAuthChallenge, packet: AuthPacket, cancel: BotMutable<boolean>) => void): this
-    OnRequestRealms(callback: (bot: Bot, packet: AuthPacket) => void): this
-    OnSelectRealm(callback: (info: RealmInfo[], realm: BotMutable<RealmInfo>) => void): this
-    OnCloseAuthConnection(callback: (bot: Bot, shouldClose: BotMutable<boolean>, cancel: BotMutable<boolean>) => void): this
-    OnWorldAuthChallenge(callback: (bot: Bot, packetIn: WorldPacket, packetOut: WorldPacket, cancel: BotMutable<boolean>) => void): this
-    OnWorldAuthResponse(callback: (bot: Bot, response: WorldAuthResponse, packetOut: WorldPacket, cancel: BotMutable<boolean>) => void): this
-    OnWorldPacket(id: EventID, callback: (bot: Bot, packet: WorldPacket) => void): this
-    OnWorldPacket(callback: (bot: Bot, packet: WorldPacket) => void): this
-    Register(mod: string, name: string): this
+    OnCreate(callback: (bot: Bot) => void): BotProfile;
+    OnAuthChallenge(callback: (bot: Bot, packet: AuthPacket, cancel: BotMutable<boolean>) => void): BotProfile
+    OnAuthProof(callback: (bot: Bot, challenge: ServerAuthChallenge, packet: AuthPacket, cancel: BotMutable<boolean>) => void): BotProfile
+    OnRequestRealms(callback: (bot: Bot, packet: AuthPacket) => void): BotProfile
+    OnSelectRealm(callback: (info: RealmInfo[], realm: BotMutable<RealmInfo>) => void): BotProfile
+    OnCloseAuthConnection(callback: (bot: Bot, shouldClose: BotMutable<boolean>, cancel: BotMutable<boolean>) => void): BotProfile
+    OnWorldAuthChallenge(callback: (bot: Bot, packetIn: WorldPacket, packetOut: WorldPacket, cancel: BotMutable<boolean>) => void): BotProfile
+    OnWorldAuthResponse(callback: (bot: Bot, response: WorldAuthResponse, packetOut: WorldPacket, cancel: BotMutable<boolean>) => void): BotProfile
+    OnWorldPacket(id: EventID, callback: (bot: Bot, packet: WorldPacket) => void): BotProfile
+    OnWorldPacket(callback: (bot: Bot, packet: WorldPacket) => void): BotProfile
+    Register(mod: string, name: string): BotProfile
 }
 
 declare class BotProfile {
