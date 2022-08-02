@@ -27,6 +27,20 @@ if(NOT json_POPULATED)
   FetchContent_MakeAvailable(json)
 endif()
 
+# use trinitycore dep (tswow repo)
+if(EXISTS ${CMAKE_SOURCE_DIR}/dep/cxxopts)
+  set(cxxopts_include ${CMAKE_SOURCE_DIR}/dep/cxxopts)
+# clone it ourselves
+elseif(NOT cxxopts_POPULATED)
+  FetchContent_Declare(
+    cxxopts
+    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+    GIT_TAG v3.0.0
+  )
+  FetchContent_MakeAvailable(cxxopts)
+  set(cxxopts_include ${cxxopts_SOURCE_DIR}/include)
+endif()
+
 # borrowed function from trinitycore
 function(CollectIncludeDirectories current_dir variable)
   list(FIND ARGN "${current_dir}" IS_EXCLUDED)
@@ -59,7 +73,7 @@ target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nl
 target_include_directories(bots PRIVATE 
   ${magic_enum_SOURCE_DIR}/include
   ${thread_pool_SOURCE_DIR}
-  ${cxxopts_SOURCE_DIR}/include
+  ${cxxopts_include}
   ${sol2_SOURCE_DIR}/include
   ${LUA_ROOT}
   ${CMAKE_CURRENT_SOURCE_DIR}
