@@ -61,7 +61,11 @@ void Bot::QueueDisconnect()
 
 void Bot::DisconnectNow()
 {
-    BOT_LOG_DEBUG("bot","Logging out %s",m_username.c_str());
+    if (m_worldSocket.has_value() || m_authSocket.has_value())
+    {
+        BOT_LOG_DEBUG("bot","Logging out %s",m_username.c_str());
+    }
+
     if (m_worldSocket.has_value())
     {
         m_worldSocket.value().Close();

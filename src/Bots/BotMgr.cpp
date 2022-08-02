@@ -54,7 +54,6 @@ boost::asio::awaitable<void> BotThread::run()
                         continue;
                     }
 
-                    bot->DisconnectNow();
                     boost::asio::co_spawn(executor, bot->Connect(executor, "127.0.0.1"), boost::asio::detached);
                 }
                 m_queuedLogins.clear();
