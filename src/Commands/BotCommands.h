@@ -18,7 +18,7 @@
 
 #include "BotCommandMgr.h"
 #include "BotMgr.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 
 void BotCommandMgr::RegisterBaseCommands()
 {

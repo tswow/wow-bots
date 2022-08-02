@@ -17,7 +17,7 @@
 #include "BotMgr.h"
 #include "Bot.h"
 #include "BotAuth.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 #include "BotLua.h"
 #include "BotLogging.h"
 #include "Config.h"
@@ -81,7 +81,7 @@ boost::asio::awaitable<void> BotThread::run()
                     {
                         if (bot.second->m_thread == this)
                         {
-                            bot.second->m_cached_events = BotEvents();
+                            bot.second->m_cached_events = BotProfile();
                         }
                     }
                     m_events->Reset();
@@ -94,7 +94,7 @@ boost::asio::awaitable<void> BotThread::run()
 }
 
 BotThread::BotThread()
-    : m_events(std::make_unique<BotEventsMgr>())
+    : m_events(std::make_unique<BotProfileMgr>())
     , m_lua(std::make_unique<BotLua>())
     , m_threadId(UINT32_MAX)
 {

@@ -29,9 +29,9 @@
 #define ROOT_EVENT_NAME "tswow:root_events"
 
 class Bot;
-class BotEventsMgr;
+class BotProfileMgr;
 
-class BotEventData
+class BotProfileData
 {
 public:
     EVENT_STORAGE(OnCreate, Bot& bot)
@@ -44,11 +44,11 @@ public:
     EVENT_STORAGE(OnWorldAuthResponse, Bot& bot, WorldAuthResponse& response, WorldPacket& packetOut, BotMutable<bool> cancel)
     EVENT_STORAGE(OnWorldPacket, Bot& bot, WorldPacket& packet)
 private:
-    BotEventData(BotEventsMgr* mgr);
-    std::vector<BotEventData*> m_parents;
-    std::vector<BotEventData*> m_children;
-    BotEventsMgr* m_mgr;
-    void apply_extensions(BotEventData* parent)
+    BotProfileData(BotProfileMgr* mgr);
+    std::vector<BotProfileData*> m_parents;
+    std::vector<BotProfileData*> m_children;
+    BotProfileMgr* m_mgr;
+    void apply_extensions(BotProfileData* parent)
     {
         EXTEND_EVENT(this, parent, OnWorldPacket);
         EXTEND_EVENT(this, parent, OnCreate);
@@ -60,46 +60,53 @@ private:
         EXTEND_EVENT(this, parent, OnWorldAuthChallenge);
         EXTEND_EVENT(this, parent, OnWorldAuthResponse);
     }
-    friend class BotEventsMgr;
-    friend class BotEvents;
+    friend class BotProfileMgr;
+    friend class BotProfile;
 };
 
-class BotEvents
+class BotProfile
 {
 public:
-    EVENT(OnCreate)
-    EVENT(OnAuthChallenge)
-    EVENT(OnAuthProof)
-    EVENT(OnRequestRealms)
-    EVENT(OnSelectRealm)
-    EVENT(OnCloseAuthConnection)
-    EVENT(OnWorldAuthChallenge)
-    EVENT(OnWorldAuthResponse)
-    ID_EVENT(OnWorldPacket)
+    class BotEvents
+    {
+    public:
+        BotEvents(BotProfile* profile);
+        EVENT(OnCreate)
+        EVENT(OnAuthChallenge)
+        EVENT(OnAuthProof)
+        EVENT(OnRequestRealms)
+        EVENT(OnSelectRealm)
+        EVENT(OnCloseAuthConnection)
+        EVENT(OnWorldAuthChallenge)
+        EVENT(OnWorldAuthResponse)
+        ID_EVENT(OnWorldPacket)
+    private:
+        BotProfile* m_profile;
+    } Events;
     void Register(std::string const& mod, std::string const& name);
-    BotEvents() = default;
+    BotProfile();
     bool IsLoaded();
 private:
-    BotEventData * m_storage = nullptr;
-    BotEvents(BotEventData* data);
-    friend class BotEventsMgr;
+    BotProfileData * m_storage = nullptr;
+    BotProfile(BotProfileData* data);
+    friend class BotProfileMgr;
 };
 
 class BotThread;
-class BotEventsMgr
+class BotProfileMgr
 {
 public:
     void Reset();
     void Build();
-    BotEvents CreateEvents(std::vector<BotEvents> const& parents);
-    BotEvents GetEvents(std::string const& events);
-    BotEvents GetRootEvent();
-    BotEventsMgr();
-    static BotEventData* GetStorage(BotEvents const& events);
+    BotProfile CreateEvents(std::vector<BotProfile> const& parents);
+    BotProfile GetEvents(std::string const& events);
+    BotProfile GetRootEvent();
+    BotProfileMgr();
+    static BotProfileData* GetStorage(BotProfile const& events);
 private:
-    uint32_t GetDeepestChild(BotEventData* events, std::vector<std::vector<BotEventData*>>& depthLayers, std::map<BotEventData*, uint32_t>& cachedDepth);
-    void ApplyParents(BotEventData* target, BotEventData* cur, std::set<BotEventData*>& visited);
-    std::vector<std::unique_ptr<BotEventData>> m_events;
-    std::map<std::string, BotEventData*> m_namedEvents;
-    friend class BotEvents;
+    uint32_t GetDeepestChild(BotProfileData* events, std::vector<std::vector<BotProfileData*>>& depthLayers, std::map<BotProfileData*, uint32_t>& cachedDepth);
+    void ApplyParents(BotProfileData* target, BotProfileData* cur, std::set<BotProfileData*>& visited);
+    std::vector<std::unique_ptr<BotProfileData>> m_events;
+    std::map<std::string, BotProfileData*> m_namedEvents;
+    friend class BotProfile;
 };

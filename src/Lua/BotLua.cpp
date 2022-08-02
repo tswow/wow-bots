@@ -16,7 +16,7 @@
  */
 #include "BotLua.h"
 #include "Bot.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 #include "BotMutable.h"
 #include "BotLuaShared.h"
 #include "BotLogging.h"
@@ -57,17 +57,20 @@ void BotLua::Reload(BotThread* thread)
 {
     m_state = sol::state();
     RegisterSharedLua(m_state);
-    auto LBotEvents = m_state.new_usertype<BotEvents>("BotEvents");
-    LBotEvents.set_function("OnWorldPacket", sol::overload(&BotEvents::_LOnWorldPacket,&BotEvents::LidOnWorldPacket));
-    LBotEvents.set_function("OnCreate", &BotEvents::LOnCreate);
-    LBotEvents.set_function("OnAuthChallenge", &BotEvents::LOnAuthChallenge);
-    LBotEvents.set_function("OnAuthProof", &BotEvents::LOnAuthProof);
-    LBotEvents.set_function("OnRequestRealms", &BotEvents::LOnRequestRealms);
-    LBotEvents.set_function("OnSelectRealm", &BotEvents::LOnSelectRealm);
-    LBotEvents.set_function("OnCloseAuthConnection", &BotEvents::LOnCloseAuthConnection);
-    LBotEvents.set_function("OnWorldAuthChallenge", &BotEvents::LOnWorldAuthChallenge);
-    LBotEvents.set_function("OnWorldAuthResponse", &BotEvents::LOnWorldAuthResponse);
-    LBotEvents.set_function("Register", &BotEvents::Register);
+    auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
+    LBotProfile.set("Events", &BotProfile::Events);
+    LBotProfile.set_function("Register", &BotProfile::Register);
+
+    auto LBotEvents = m_state.new_usertype<BotProfile::BotEvents>("BotEvents");
+    LBotEvents.set_function("OnWorldPacket", sol::overload(&BotProfile::BotEvents::_LOnWorldPacket,&BotProfile::BotEvents::LidOnWorldPacket));
+    LBotEvents.set_function("OnCreate", &BotProfile::BotEvents::LOnCreate);
+    LBotEvents.set_function("OnAuthChallenge", &BotProfile::BotEvents::LOnAuthChallenge);
+    LBotEvents.set_function("OnAuthProof", &BotProfile::BotEvents::LOnAuthProof);
+    LBotEvents.set_function("OnRequestRealms", &BotProfile::BotEvents::LOnRequestRealms);
+    LBotEvents.set_function("OnSelectRealm", &BotProfile::BotEvents::LOnSelectRealm);
+    LBotEvents.set_function("OnCloseAuthConnection", &BotProfile::BotEvents::LOnCloseAuthConnection);
+    LBotEvents.set_function("OnWorldAuthChallenge", &BotProfile::BotEvents::LOnWorldAuthChallenge);
+    LBotEvents.set_function("OnWorldAuthResponse", &BotProfile::BotEvents::LOnWorldAuthResponse);
 
     RegisterPacket<WorldPacket>("WorldPacket", m_state);
     RegisterPacket<AuthPacket>("AuthPacket", m_state);
@@ -87,15 +90,15 @@ void BotLua::Reload(BotThread* thread)
         []() { return AuthPacket(); }
     ));
 
-    m_state.set("RootBot", BotEvents(thread->m_events->GetRootEvent()));
-    m_state.set_function("CreateBot", sol::overload(
+    m_state.set("RootBot", BotProfile(thread->m_events->GetRootEvent()));
+    m_state.set_function("CreateBotProfile", sol::overload(
         [thread](sol::table parentsTable) {
-            std::vector<BotEvents> parents;
+            std::vector<BotProfile> parents;
             for (auto [key, value] : parentsTable)
             {
-                if (value.is<BotEvents>())
+                if (value.is<BotProfile>())
                 {
-                    parents.push_back(value.as<BotEvents>());
+                    parents.push_back(value.as<BotProfile>());
                 }
             }
             return thread->m_events->CreateEvents(parents);

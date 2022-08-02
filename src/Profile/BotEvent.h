@@ -116,50 +116,50 @@ protected:
 		TSEvent<name##__type> name##_callbacks;\
 
 #define EVENT_ROOT(name,is_fn,fn_cxx,fn_lua) \
-		BotEvents name(BotEventData::name##__type cb) {\
-				m_storage->name##_callbacks.m_cxx_callbacks.push_back(cb);\
+		BotProfile name(BotProfileData::name##__type cb) {\
+				m_profile->m_storage->name##_callbacks.m_cxx_callbacks.push_back(cb);\
 				if(is_fn) fn_cxx(cb);\
-				return *this;\
+				return *m_profile;\
 		}\
-		BotEvents L##name(sol::protected_function cb)\
+		BotProfile L##name(sol::protected_function cb)\
 		{\
-				m_storage->name##_callbacks.m_lua_callbacks.push_back(cb);\
+				m_profile->m_storage->name##_callbacks.m_lua_callbacks.push_back(cb);\
 				if(is_fn) fn_lua(cb);\
-				return *this;\
+				return *m_profile;\
 		}\
 
 #define ID_EVENT_ROOT(name,is_fn,fn_plain_cxx,fn_plain_lua,fn_mapped_cxx,fn_mapped_lua)\
 		EVENT_ROOT(name,is_fn,fn_plain_cxx,fn_plain_lua)\
-		BotEvents name(uint32_t reg_id, BotEventData::name##__type cb)\
+		BotProfile name(uint32_t reg_id, BotProfileData::name##__type cb)\
 		{\
-				auto & cbs = m_storage->name##_callbacks.m_id_cxx_callbacks;\
+				auto & cbs = m_profile->m_storage->name##_callbacks.m_id_cxx_callbacks;\
 				if(reg_id >= cbs.size())\
 				{\
 						cbs.resize(uint64_t(reg_id) + 1);\
 				}\
 				cbs[reg_id].push_back(cb);\
 				if (is_fn) fn_mapped_cxx(cb,reg_id);\
-				return *this;\
+				return *m_profile;\
 		}\
-		BotEvents name(std::vector<uint32_t> ids, BotEventData::name##__type cb) {\
+		BotProfile name(std::vector<uint32_t> ids, BotProfileData::name##__type cb) {\
 				for(uint32_t id : ids)\
 				{\
 						name(id, cb);\
 				}\
-				return *this;\
+				return *m_profile;\
 		}\
-		BotEvents _L##name(uint32_t reg_id, sol::protected_function cb)\
+		BotProfile _L##name(uint32_t reg_id, sol::protected_function cb)\
 		{\
-				auto& cbs = m_storage->name##_callbacks.m_id_lua_callbacks;\
+				auto& cbs = m_profile->m_storage->name##_callbacks.m_id_lua_callbacks;\
 				if(reg_id >= cbs.size())\
 				{\
 						cbs.resize(uint64_t(reg_id) + 1);\
 				}\
 				cbs[reg_id].push_back(cb);\
 				if (is_fn) fn_mapped_lua(cb,reg_id);\
-				return *this;\
+				return *m_profile;\
 		}\
-		BotEvents Lid##name(sol::object obj, sol::protected_function cb)\
+		BotProfile Lid##name(sol::object obj, sol::protected_function cb)\
 		{\
 				switch(obj.get_type())\
 				{\
@@ -174,7 +174,7 @@ protected:
 								}\
 								break;\
 				}\
-				return *this;\
+				return *m_profile;\
 		}\
 
 #define EVENT_FN(name,fn)\
@@ -184,20 +184,20 @@ protected:
 		ID_EVENT_ROOT(name,true,fn,fn,fn,fn)
 
 #define EVENT(name)\
-		EVENT_ROOT(name,false,[](BotEventData::name##__type){},[](sol::protected_function){})
+		EVENT_ROOT(name,false,[](BotProfileData::name##__type){},[](sol::protected_function){})
 
 #define ID_EVENT(name)\
-		ID_EVENT_ROOT(name,false,[](BotEventData::name##__type){},[](sol::protected_function){},[](BotEventData::name##__type,uint32_t){},[](sol::protected_function,uint32_t){});
+		ID_EVENT_ROOT(name,false,[](BotProfileData::name##__type){},[](sol::protected_function){},[](BotProfileData::name##__type,uint32_t){},[](sol::protected_function,uint32_t){});
 
 #define FIRE(name,event_target,setup,...)\
 		{\
-				for(auto cb : BotEventsMgr::GetStorage(event_target)->name##_callbacks.m_cxx_callbacks)\
+				for(auto cb : BotProfileMgr::GetStorage(event_target)->name##_callbacks.m_cxx_callbacks)\
 				{\
 						setup\
 						cb(__VA_ARGS__);\
 				}\
 				\
-				for(auto cb : BotEventsMgr::GetStorage(event_target)->name##_callbacks.m_lua_callbacks)\
+				for(auto cb : BotProfileMgr::GetStorage(event_target)->name##_callbacks.m_lua_callbacks)\
 				{\
 					try\
 					{\
@@ -218,7 +218,7 @@ protected:
 #define FIRE_ID(ref,name,event_target,setup,...)\
 		{\
 				FIRE(name,event_target,setup,__VA_ARGS__)\
-				auto cxx_cbs = BotEventsMgr::GetStorage(event_target)->name##_callbacks.m_id_cxx_callbacks;\
+				auto cxx_cbs = BotProfileMgr::GetStorage(event_target)->name##_callbacks.m_id_cxx_callbacks;\
 				if(ref < cxx_cbs.size())\
 				{\
 						for(auto cb: cxx_cbs[ref])\
@@ -227,7 +227,7 @@ protected:
 								cb(__VA_ARGS__);\
 						}\
 				}\
-				auto lua_cbs = BotEventsMgr::GetStorage(event_target)->name##_callbacks.m_id_lua_callbacks;\
+				auto lua_cbs = BotProfileMgr::GetStorage(event_target)->name##_callbacks.m_id_lua_callbacks;\
 				if(ref < lua_cbs.size())\
 				{\
 						for(auto cb: lua_cbs[ref])\

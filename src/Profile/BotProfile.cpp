@@ -14,42 +14,46 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "BotEvents.h"
+#include "BotProfile.h"
 
 #include <set>
 #include <map>
 #include <memory>
 
-BotEventData::BotEventData(BotEventsMgr* mgr)
+BotProfileData::BotProfileData(BotProfileMgr* mgr)
     : m_mgr(mgr)
 {}
 
-void BotEventsMgr::Reset()
+BotProfile::BotEvents::BotEvents(BotProfile* profile)
+    : m_profile(profile)
+{}
+
+void BotProfileMgr::Reset()
 {
     m_namedEvents.clear();
     m_events.clear();
-    m_events.push_back(std::unique_ptr<BotEventData>(new BotEventData(this)));
+    m_events.push_back(std::unique_ptr<BotProfileData>(new BotProfileData(this)));
     m_namedEvents[ROOT_EVENT_NAME] = m_events[0].get();
 }
 
-BotEvents BotEventsMgr::GetRootEvent()
+BotProfile BotProfileMgr::GetRootEvent()
 {
-    return BotEvents(m_events[0].get());
+    return BotProfile(m_events[0].get());
 }
 
 
-BotEventsMgr::BotEventsMgr()
+BotProfileMgr::BotProfileMgr()
 {
     Reset();
 }
 
-BotEvents BotEventsMgr::CreateEvents(std::vector<BotEvents> const& parents)
+BotProfile BotProfileMgr::CreateEvents(std::vector<BotProfile> const& parents)
 {
-    m_events.push_back(std::unique_ptr<BotEventData>(new BotEventData(this)));
-    BotEventData* evts = m_events[m_events.size() - 1].get();
+    m_events.push_back(std::unique_ptr<BotProfileData>(new BotProfileData(this)));
+    BotProfileData* evts = m_events[m_events.size() - 1].get();
 
     // Add parents
-    for (BotEvents const& evt: parents)
+    for (BotProfile const& evt: parents)
     {
         evts->m_parents.push_back(evt.m_storage);
         evt.m_storage->m_children.push_back(evts);
@@ -62,12 +66,12 @@ BotEvents BotEventsMgr::CreateEvents(std::vector<BotEvents> const& parents)
         GetRootEvent().m_storage->m_children.push_back(evts);
     }
 
-    return BotEvents(evts);
+    return BotProfile(evts);
 }
 
-void BotEventsMgr::ApplyParents(BotEventData* target, BotEventData* cur, std::set<BotEventData*>& visited)
+void BotProfileMgr::ApplyParents(BotProfileData* target, BotProfileData* cur, std::set<BotProfileData*>& visited)
 {
-    for (BotEventData* parent : cur->m_parents)
+    for (BotProfileData* parent : cur->m_parents)
     {
         if (!visited.contains(parent))
         {
@@ -78,7 +82,7 @@ void BotEventsMgr::ApplyParents(BotEventData* target, BotEventData* cur, std::se
     }
 }
 
-uint32_t BotEventsMgr::GetDeepestChild(BotEventData* events, std::vector<std::vector<BotEventData*>>& depthLayers, std::map<BotEventData*, uint32_t>& cachedDepth)
+uint32_t BotProfileMgr::GetDeepestChild(BotProfileData* events, std::vector<std::vector<BotProfileData*>>& depthLayers, std::map<BotProfileData*, uint32_t>& cachedDepth)
 {
     auto itr = cachedDepth.find(events);
     if (itr != cachedDepth.end())
@@ -87,7 +91,7 @@ uint32_t BotEventsMgr::GetDeepestChild(BotEventData* events, std::vector<std::ve
     }
 
     uint32_t max = 0;
-    for (BotEventData* child: events->m_children)
+    for (BotProfileData* child: events->m_children)
     {
         uint32_t depth = GetDeepestChild(child, depthLayers, cachedDepth);
         if (depth > max)
@@ -105,19 +109,19 @@ uint32_t BotEventsMgr::GetDeepestChild(BotEventData* events, std::vector<std::ve
     return max;
 }
 
-void BotEventsMgr::Build()
+void BotProfileMgr::Build()
 {
     // set up depth layers
-    std::vector<std::vector<BotEventData*>> depthLayers;
-    std::map<BotEventData*, uint32_t> cachedDepth;
+    std::vector<std::vector<BotProfileData*>> depthLayers;
+    std::map<BotProfileData*, uint32_t> cachedDepth;
     GetDeepestChild(GetRootEvent().m_storage, depthLayers, cachedDepth);
 
     // apply parenting at levels
-    for (std::vector<BotEventData*> const& layer : depthLayers)
+    for (std::vector<BotProfileData*> const& layer : depthLayers)
     {
-        for (BotEventData* evt : layer)
+        for (BotProfileData* evt : layer)
         {
-            std::set<BotEventData*> visited;
+            std::set<BotProfileData*> visited;
             ApplyParents(evt, evt, visited);
         }
     }
@@ -130,11 +134,17 @@ void BotEventsMgr::Build()
     }
 }
 
-BotEvents::BotEvents(BotEventData* data)
-    : m_storage(data)
+BotProfile::BotProfile()
+    : m_storage(nullptr)
+    , Events(this)
 {}
 
-void BotEvents::Register(std::string const& mod, std::string const& name)
+BotProfile::BotProfile(BotProfileData* data)
+    : m_storage(data)
+    , Events(this)
+{}
+
+void BotProfile::Register(std::string const& mod, std::string const& name)
 {
     std::string merged = mod + ":" + name;
     auto& namedEvents = m_storage->m_mgr->m_namedEvents;
@@ -145,22 +155,22 @@ void BotEvents::Register(std::string const& mod, std::string const& name)
     namedEvents[merged] = m_storage;
 }
 
-BotEvents BotEventsMgr::GetEvents(std::string const& events)
+BotProfile BotProfileMgr::GetEvents(std::string const& events)
 {
     auto itr = m_namedEvents.find(events);
     if (itr == m_namedEvents.end())
     {
         throw new std::runtime_error("Attempted to load non-existing events " + events);
     }
-    return BotEvents(itr->second);
+    return BotProfile(itr->second);
 }
 
-bool BotEvents::IsLoaded()
+bool BotProfile::IsLoaded()
 {
     return m_storage != nullptr;
 }
 
-BotEventData* BotEventsMgr::GetStorage(BotEvents const& events)
+BotProfileData* BotProfileMgr::GetStorage(BotProfile const& events)
 {
     return events.m_storage;
 }

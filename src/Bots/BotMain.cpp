@@ -17,7 +17,7 @@
 #include "BotMain.h"
 #include "BotMgr.h"
 #include "BotCommandMgr.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 #include "BotLogging.h"
 #include "Map/BotMapDataMgr.h"
 

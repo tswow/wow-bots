@@ -17,7 +17,7 @@
 #include "Bot.h"
 #include "BotSocket.h"
 #include "BotMgr.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 #include "BotLogging.h"
 #include "HMAC.h"
 
@@ -89,7 +89,7 @@ BotSocket& Bot::GetAuthSocket()
     return m_authSocket.value();
 }
 
-BotEvents Bot::GetEvents()
+BotProfile Bot::GetEvents()
 {
     if (!m_cached_events.IsLoaded())
     {

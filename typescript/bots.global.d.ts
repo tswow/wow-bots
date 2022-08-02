@@ -84,7 +84,11 @@ declare class BotEvents {
     Register(mod: string, name: string): this
 }
 
-declare const RootBot: BotEvents
+declare class BotProfile {
+    Events: BotEvents;
+}
+declare const RootBot: BotProfile
+declare function CreateBotProfile(): BotProfile
 
 declare function CreateAuthPacket(size?: number): AuthPacket
 declare function CreateWorldPacket(opcode: Opcodes, size?: number): AuthPacket

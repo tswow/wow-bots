@@ -17,13 +17,13 @@
 #pragma once
 
 #include "BotSocket.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 
 #include <string>
 #include <optional>
 
 class BotThread;
-class BotEvents;
+class BotProfile;
 
 class Bot
 {
@@ -32,7 +32,7 @@ class Bot
     std::string m_password;
     std::string m_authserverIp;
     bool m_disconnected;
-    BotEvents m_cached_events;
+    BotProfile m_cached_events;
     std::string m_events;
     std::optional<Trinity::Crypto::ARC4> m_encrypt;
     std::optional<Trinity::Crypto::ARC4> m_decrypt;
@@ -50,7 +50,7 @@ public:
     std::string const& GetPassword() const;
     BotSocket& GetWorldSocket();
     BotSocket& GetAuthSocket();
-    BotEvents GetEvents();
+    BotProfile GetEvents();
     friend class WorldPacket;
     friend class BotThread;
     friend class BotMgr;

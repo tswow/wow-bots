@@ -30,9 +30,9 @@
 #include <atomic>
 
 class Bot;
-class BotEvents;
+class BotProfile;
 class BotLua;
-class BotEventsMgr;
+class BotProfileMgr;
 
 class BotThread
 {
@@ -40,7 +40,7 @@ public:
     void start();
     void Reload();
     BotThread();
-    std::unique_ptr<BotEventsMgr> m_events;
+    std::unique_ptr<BotProfileMgr> m_events;
     std::unique_ptr<BotLua> m_lua;
     ~BotThread();
 private:

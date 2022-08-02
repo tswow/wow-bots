@@ -18,7 +18,7 @@
 #include "Bot.h"
 #include "BotPacket.h"
 #include "BotMutable.h"
-#include "BotEvents.h"
+#include "BotProfile.h"
 #include "BotLogging.h"
 
 #include "BigNumber.h"
