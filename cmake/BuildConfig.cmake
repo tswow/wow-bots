@@ -15,5 +15,5 @@ file(APPEND ${BDIR}/profiles/global.d.ts "\n\n${PROFILES_FILE}")
 file(APPEND ${BDIR}/commands/global.d.ts "\n\n${COMMANDS_FILE}")
 
 # Create config file
-file(READ ${SDIR}/profiles.conf CONFIG_FILE)
-file(WRITE ${BDIR}/profiles.conf ${CONFIG_FILE})
+file(READ ${SDIR}/bots.conf CONFIG_FILE)
+file(WRITE ${BDIR}/bots.conf ${CONFIG_FILE})
