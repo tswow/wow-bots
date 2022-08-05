@@ -28,6 +28,12 @@
 #include <map>
 #include <thread>
 
+static uint64_t now()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
+
 boost::asio::awaitable<void> BotThread::run()
 {
     BOT_LOG_DEBUG("BotThread", "Starting bot thread %i", m_threadId);
@@ -43,7 +49,7 @@ boost::asio::awaitable<void> BotThread::run()
             {
                 if (bot->m_behavior)
                 {
-                    bot->m_behavior->Update(*bot, 0);
+                    bot->m_behavior->Update(*bot, now());
                 }
             }
 
