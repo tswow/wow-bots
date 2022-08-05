@@ -38,7 +38,6 @@ Bot::Bot(BotThread* thread, std::string const& username, std::string const& pass
 {
     std::transform(m_username.begin(), m_username.end(), m_username.begin(), [](uint8_t c) { return std::toupper(c); });
     std::transform(m_password.begin(), m_password.end(), m_password.begin(), [](uint8_t c) { return std::toupper(c); });
-    FIRE(OnCreate, this->GetEvents(), {}, *this);
 }
 
 std::string const& Bot::GetUsername() const
@@ -168,4 +167,5 @@ void Bot::LoadScripts()
         m_behavior = std::make_unique<TreeExecutor<Bot, std::monostate, std::monostate>>(m_thread->m_events->GetBehaviorTreeContext(),m_cached_events.m_root);
         m_thread->m_botsWithAI[this->m_username] = this;
     }
+    FIRE(OnLoad, m_cached_events, {}, *this);
 }

@@ -40,7 +40,7 @@ class BehaviorTreeContext;
 class BotProfileData
 {
 public:
-    EVENT_STORAGE(OnCreate, Bot& bot)
+    EVENT_STORAGE(OnLoad, Bot& bot)
     EVENT_STORAGE(OnAuthChallenge, Bot& bot, AuthPacket& packetOut, BotMutable<bool> cancel)
     EVENT_STORAGE(OnAuthProof, Bot& bot, ServerAuthChallenge& challenge, AuthPacket& packetOut, BotMutable<bool> cancel)
     EVENT_STORAGE(OnRequestRealms, Bot& bot, AuthPacket& packetOut, BotMutable<bool> cancel)
@@ -57,7 +57,7 @@ private:
     void apply_extensions(BotProfileData* parent)
     {
         EXTEND_EVENT(this, parent, OnWorldPacket);
-        EXTEND_EVENT(this, parent, OnCreate);
+        EXTEND_EVENT(this, parent, OnLoad);
         EXTEND_EVENT(this, parent, OnAuthChallenge);
         EXTEND_EVENT(this, parent, OnAuthProof);
         EXTEND_EVENT(this, parent, OnRequestRealms);
@@ -73,7 +73,7 @@ private:
 class BotProfile
 {
 public:
-    EVENT(OnCreate)
+    EVENT(OnLoad)
     EVENT(OnAuthChallenge)
     EVENT(OnAuthProof)
     EVENT(OnRequestRealms)

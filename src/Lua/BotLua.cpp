@@ -65,8 +65,8 @@ void BotLua::Reload(BotThread* thread)
     auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
     LBotProfile.set_function("Register", &BotProfile::Register);
     LBotProfile.set_function("SetBehaviorRoot", &BotProfile::SetBehaviorRoot);
-    LBotProfile.set_function("OnWorldPacket", sol::overload(&BotProfile::_LOnWorldPacket,&BotProfile::LidOnWorldPacket));
-    LBotProfile.set_function("OnCreate", &BotProfile::LOnCreate);
+    LBotProfile.set_function("OnWorldPacket", sol::overload(&BotProfile::LOnWorldPacket, &BotProfile::_LOnWorldPacket,&BotProfile::LidOnWorldPacket));
+    LBotProfile.set_function("OnLoad", &BotProfile::LOnLoad);
     LBotProfile.set_function("OnAuthChallenge", &BotProfile::LOnAuthChallenge);
     LBotProfile.set_function("OnAuthProof", &BotProfile::LOnAuthProof);
     LBotProfile.set_function("OnRequestRealms", &BotProfile::LOnRequestRealms);
