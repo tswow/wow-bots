@@ -124,6 +124,12 @@ boost::asio::awaitable<int64_t> WorldPacket::Send(Bot& bot)
     uint16_t size = m_data.size() - 2;
     memcpy(m_data.data(), &size, sizeof(uint16_t));
     std::reverse(m_data.begin(), m_data.begin() + 2);
+
+    if (bot.m_encrypt.has_value())
+    {
+        bot.m_encrypt->UpdateData(m_data.data(), 6);
+    }
+
     // need to do this so the m_data array is in scope
     co_return co_await bot.GetWorldSocket().WriteVector(m_data);
 }
