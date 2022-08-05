@@ -21,7 +21,6 @@
 #include "BotLuaShared.h"
 #include "BotLogging.h"
 #include "Config.h"
-
 #include "BehaviorTree.h"
 
 #include <vector>
@@ -29,7 +28,7 @@
 namespace fs = std::filesystem;
 
 template <typename T>
-void RegisterPacket(std::string const& name, sol::state& state)
+auto RegisterPacket(std::string const& name, sol::state& state)
 {
     auto type = state.new_usertype<T>(name);
     type.set_function("WriteUInt8", &T::WriteUInt8);
@@ -53,6 +52,7 @@ void RegisterPacket(std::string const& name, sol::state& state)
         }
         return target.WriteBytes<std::vector<uint8_t>>(vec);
     });
+    return type;
 }
 
 void BotLua::Reload(BotThread* thread)
@@ -75,7 +75,8 @@ void BotLua::Reload(BotThread* thread)
     LBotProfile.set_function("OnWorldAuthChallenge", &BotProfile::LOnWorldAuthChallenge);
     LBotProfile.set_function("OnWorldAuthResponse", &BotProfile::LOnWorldAuthResponse);
 
-    RegisterPacket<WorldPacket>("WorldPacket", m_state);
+    auto worldpacket = RegisterPacket<WorldPacket>("WorldPacket", m_state);
+    worldpacket.set_function("GetOpcode", &WorldPacket::GetOpcode);
     RegisterPacket<AuthPacket>("AuthPacket", m_state);
 
     m_state.set_function("CreateWorldPacket", sol::overload(
