@@ -162,9 +162,9 @@ void Bot::LoadScripts()
 {
     m_behavior = nullptr;
     m_cached_events = m_thread->m_events->GetEvents(m_events);
-    if (m_cached_events.m_root)
+    if (m_cached_events.m_storage->m_root)
     {
-        m_behavior = std::make_unique<TreeExecutor<Bot, std::monostate, std::monostate>>(m_thread->m_events->GetBehaviorTreeContext(),m_cached_events.m_root);
+        m_behavior = std::make_unique<TreeExecutor<Bot, std::monostate, std::monostate>>(m_thread->m_events->GetBehaviorTreeContext(),m_cached_events.m_storage->m_root);
         m_thread->m_botsWithAI[this->m_username] = this;
     }
     FIRE(OnLoad, m_cached_events, {}, *this);

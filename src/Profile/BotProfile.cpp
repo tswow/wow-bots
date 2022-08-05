@@ -158,7 +158,7 @@ void BotProfile::Register(std::string const& mod, std::string const& name)
 
 void BotProfile::SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root)
 {
-    m_root = root;
+    m_storage->m_root = root;
 }
 
 BotProfile BotProfileMgr::GetEvents(std::string const& events)

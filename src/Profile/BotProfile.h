@@ -54,6 +54,7 @@ private:
     std::vector<BotProfileData*> m_parents;
     std::vector<BotProfileData*> m_children;
     BotProfileMgr* m_mgr;
+    Node<Bot, std::monostate, std::monostate>* m_root = nullptr;
     void apply_extensions(BotProfileData* parent)
     {
         EXTEND_EVENT(this, parent, OnWorldPacket);
@@ -68,6 +69,7 @@ private:
     }
     friend class BotProfileMgr;
     friend class BotProfile;
+    friend class Bot;
 };
 
 class BotProfile
@@ -88,7 +90,6 @@ public:
     bool IsLoaded();
 private:
     BotProfileData * m_storage = nullptr;
-    Node<Bot, std::monostate, std::monostate>* m_root = nullptr;
     BotProfile(BotProfileData* data);
     friend class BotProfileMgr;
     friend class Bot;
