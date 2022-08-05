@@ -98,8 +98,11 @@ public:
     void Reset();
     void Seek(uint32_t offset);
     boost::asio::awaitable<int64_t> Send(Bot& bot);
+    void SendNoWait(Bot& bot);
     static boost::asio::awaitable<WorldPacket> ReadWorldPacket(Bot& bot);
     PACKET_WRITE_DECL(WorldPacket)
+private:
+    void Prepare(Bot& bot);
 };
 
 class AuthPacket: public PacketBase
@@ -111,5 +114,6 @@ public:
     void Reset();
     void Seek(uint32_t offset);
     boost::asio::awaitable<uint64_t> Send(Bot& bot);
+    void SendNoWait(Bot& bot);
     PACKET_WRITE_DECL(AuthPacket)
 };

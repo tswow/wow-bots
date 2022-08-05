@@ -39,6 +39,7 @@ public:
     boost::asio::awaitable<boost::asio::ip::tcp::endpoint> Connect(boost::asio::any_io_executor& ctx);
     uint32_t address();
 
+    void WriteVectorNoWait(std::vector<uint8_t> const& value);
     boost::asio::awaitable<uint64_t> WriteVector(std::vector<uint8_t> const& value);
     boost::asio::awaitable<uint64_t> WriteCString(std::string value);
     boost::asio::awaitable<uint64_t> WriteString(std::string value);

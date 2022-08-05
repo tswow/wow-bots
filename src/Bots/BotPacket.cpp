@@ -119,19 +119,28 @@ void WorldPacket::Seek(uint32_t offset)
     m_read_ctr = offset + 6;
 }
 
-boost::asio::awaitable<int64_t> WorldPacket::Send(Bot& bot)
+void WorldPacket::Prepare(Bot& bot)
 {
     uint16_t size = m_data.size() - 2;
     memcpy(m_data.data(), &size, sizeof(uint16_t));
     std::reverse(m_data.begin(), m_data.begin() + 2);
-
     if (bot.m_encrypt.has_value())
     {
         bot.m_encrypt->UpdateData(m_data.data(), 6);
     }
+}
 
+boost::asio::awaitable<int64_t> WorldPacket::Send(Bot& bot)
+{
     // need to do this so the m_data array is in scope
+    Prepare(bot);
     co_return co_await bot.GetWorldSocket().WriteVector(m_data);
+}
+
+void WorldPacket::SendNoWait(Bot& bot)
+{
+    Prepare(bot);
+    bot.GetWorldSocket().WriteVectorNoWait(m_data);
 }
 
 
@@ -224,6 +233,11 @@ AuthPacket::AuthPacket(size_t initialSize)
 boost::asio::awaitable<uint64_t> AuthPacket::Send(Bot& bot)
 {
     return bot.GetAuthSocket().WriteVector(m_data);
+}
+
+void AuthPacket::SendNoWait(Bot& bot)
+{
+    bot.GetAuthSocket().WriteVectorNoWait(m_data);
 }
 
 PACKET_WRITE_DEF(WorldPacket)
