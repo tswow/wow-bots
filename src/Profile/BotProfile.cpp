@@ -25,10 +25,6 @@ BotProfileData::BotProfileData(BotProfileMgr* mgr)
     : m_mgr(mgr)
 {}
 
-BotProfile::BotEvents::BotEvents(BotProfile* profile)
-    : m_profile(profile)
-{}
-
 void BotProfileMgr::Reset()
 {
     m_namedEvents.clear();
@@ -143,12 +139,10 @@ void BotProfileMgr::Build()
 
 BotProfile::BotProfile()
     : m_storage(nullptr)
-    , Events(this)
 {}
 
 BotProfile::BotProfile(BotProfileData* data)
     : m_storage(data)
-    , Events(this)
 {}
 
 void BotProfile::Register(std::string const& mod, std::string const& name)

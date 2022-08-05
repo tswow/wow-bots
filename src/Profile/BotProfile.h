@@ -73,22 +73,15 @@ private:
 class BotProfile
 {
 public:
-    class BotEvents
-    {
-    public:
-        BotEvents(BotProfile* profile);
-        EVENT(OnCreate)
-        EVENT(OnAuthChallenge)
-        EVENT(OnAuthProof)
-        EVENT(OnRequestRealms)
-        EVENT(OnSelectRealm)
-        EVENT(OnCloseAuthConnection)
-        EVENT(OnWorldAuthChallenge)
-        EVENT(OnWorldAuthResponse)
-        ID_EVENT(OnWorldPacket)
-    private:
-        BotProfile* m_profile;
-    } Events;
+    EVENT(OnCreate)
+    EVENT(OnAuthChallenge)
+    EVENT(OnAuthProof)
+    EVENT(OnRequestRealms)
+    EVENT(OnSelectRealm)
+    EVENT(OnCloseAuthConnection)
+    EVENT(OnWorldAuthChallenge)
+    EVENT(OnWorldAuthResponse)
+    ID_EVENT(OnWorldPacket)
     void SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root);
     void Register(std::string const& mod, std::string const& name);
     BotProfile();

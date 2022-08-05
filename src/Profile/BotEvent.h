@@ -117,47 +117,47 @@ protected:
 
 #define EVENT_ROOT(name,is_fn,fn_cxx,fn_lua) \
 		BotProfile name(BotProfileData::name##__type cb) {\
-				m_profile->m_storage->name##_callbacks.m_cxx_callbacks.push_back(cb);\
+				this->m_storage->name##_callbacks.m_cxx_callbacks.push_back(cb);\
 				if(is_fn) fn_cxx(cb);\
-				return *m_profile;\
+				return *this;\
 		}\
 		BotProfile L##name(sol::protected_function cb)\
 		{\
-				m_profile->m_storage->name##_callbacks.m_lua_callbacks.push_back(cb);\
+				this->m_storage->name##_callbacks.m_lua_callbacks.push_back(cb);\
 				if(is_fn) fn_lua(cb);\
-				return *m_profile;\
+				return *this;\
 		}\
 
 #define ID_EVENT_ROOT(name,is_fn,fn_plain_cxx,fn_plain_lua,fn_mapped_cxx,fn_mapped_lua)\
 		EVENT_ROOT(name,is_fn,fn_plain_cxx,fn_plain_lua)\
 		BotProfile name(uint32_t reg_id, BotProfileData::name##__type cb)\
 		{\
-				auto & cbs = m_profile->m_storage->name##_callbacks.m_id_cxx_callbacks;\
+				auto & cbs = this->m_storage->name##_callbacks.m_id_cxx_callbacks;\
 				if(reg_id >= cbs.size())\
 				{\
 						cbs.resize(uint64_t(reg_id) + 1);\
 				}\
 				cbs[reg_id].push_back(cb);\
 				if (is_fn) fn_mapped_cxx(cb,reg_id);\
-				return *m_profile;\
+				return *this;\
 		}\
 		BotProfile name(std::vector<uint32_t> ids, BotProfileData::name##__type cb) {\
 				for(uint32_t id : ids)\
 				{\
 						name(id, cb);\
 				}\
-				return *m_profile;\
+				return *this;\
 		}\
 		BotProfile _L##name(uint32_t reg_id, sol::protected_function cb)\
 		{\
-				auto& cbs = m_profile->m_storage->name##_callbacks.m_id_lua_callbacks;\
+				auto& cbs = this->m_storage->name##_callbacks.m_id_lua_callbacks;\
 				if(reg_id >= cbs.size())\
 				{\
 						cbs.resize(uint64_t(reg_id) + 1);\
 				}\
 				cbs[reg_id].push_back(cb);\
 				if (is_fn) fn_mapped_lua(cb,reg_id);\
-				return *m_profile;\
+				return *this;\
 		}\
 		BotProfile Lid##name(sol::object obj, sol::protected_function cb)\
 		{\
@@ -174,7 +174,7 @@ protected:
 								}\
 								break;\
 				}\
-				return *m_profile;\
+				return *this;\
 		}\
 
 #define EVENT_FN(name,fn)\

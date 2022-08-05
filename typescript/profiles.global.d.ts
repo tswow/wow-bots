@@ -69,7 +69,8 @@ declare class RealmInfo {
 }
 declare class WorldAuthResponse {}
 
-declare class BotEvents {
+declare class BotProfile {
+    SetBehaviorRoot(node: RootNode<Bot,void,void>)
     OnCreate(callback: (bot: Bot) => void): BotProfile;
     OnAuthChallenge(callback: (bot: Bot, packet: AuthPacket, cancel: BotMutable<boolean>) => void): BotProfile
     OnAuthProof(callback: (bot: Bot, challenge: ServerAuthChallenge, packet: AuthPacket, cancel: BotMutable<boolean>) => void): BotProfile
@@ -81,11 +82,6 @@ declare class BotEvents {
     OnWorldPacket(id: EventID, callback: (bot: Bot, packet: WorldPacket) => void): BotProfile
     OnWorldPacket(callback: (bot: Bot, packet: WorldPacket) => void): BotProfile
     Register(mod: string, name: string): BotProfile
-}
-
-declare class BotProfile {
-    Events: BotEvents;
-    SetBehaviorRoot(node: RootNode<Bot,void,void>)
 }
 declare const RootBot: BotProfile
 declare function CreateBotProfile(): BotProfile

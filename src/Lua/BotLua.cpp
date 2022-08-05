@@ -63,20 +63,17 @@ void BotLua::Reload(BotThread* thread)
 
     RegisterSharedLua(m_state);
     auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
-    LBotProfile.set("Events", &BotProfile::Events);
     LBotProfile.set_function("Register", &BotProfile::Register);
     LBotProfile.set_function("SetBehaviorRoot", &BotProfile::SetBehaviorRoot);
-
-    auto LBotEvents = m_state.new_usertype<BotProfile::BotEvents>("BotEvents");
-    LBotEvents.set_function("OnWorldPacket", sol::overload(&BotProfile::BotEvents::_LOnWorldPacket,&BotProfile::BotEvents::LidOnWorldPacket));
-    LBotEvents.set_function("OnCreate", &BotProfile::BotEvents::LOnCreate);
-    LBotEvents.set_function("OnAuthChallenge", &BotProfile::BotEvents::LOnAuthChallenge);
-    LBotEvents.set_function("OnAuthProof", &BotProfile::BotEvents::LOnAuthProof);
-    LBotEvents.set_function("OnRequestRealms", &BotProfile::BotEvents::LOnRequestRealms);
-    LBotEvents.set_function("OnSelectRealm", &BotProfile::BotEvents::LOnSelectRealm);
-    LBotEvents.set_function("OnCloseAuthConnection", &BotProfile::BotEvents::LOnCloseAuthConnection);
-    LBotEvents.set_function("OnWorldAuthChallenge", &BotProfile::BotEvents::LOnWorldAuthChallenge);
-    LBotEvents.set_function("OnWorldAuthResponse", &BotProfile::BotEvents::LOnWorldAuthResponse);
+    LBotProfile.set_function("OnWorldPacket", sol::overload(&BotProfile::_LOnWorldPacket,&BotProfile::LidOnWorldPacket));
+    LBotProfile.set_function("OnCreate", &BotProfile::LOnCreate);
+    LBotProfile.set_function("OnAuthChallenge", &BotProfile::LOnAuthChallenge);
+    LBotProfile.set_function("OnAuthProof", &BotProfile::LOnAuthProof);
+    LBotProfile.set_function("OnRequestRealms", &BotProfile::LOnRequestRealms);
+    LBotProfile.set_function("OnSelectRealm", &BotProfile::LOnSelectRealm);
+    LBotProfile.set_function("OnCloseAuthConnection", &BotProfile::LOnCloseAuthConnection);
+    LBotProfile.set_function("OnWorldAuthChallenge", &BotProfile::LOnWorldAuthChallenge);
+    LBotProfile.set_function("OnWorldAuthResponse", &BotProfile::LOnWorldAuthResponse);
 
     RegisterPacket<WorldPacket>("WorldPacket", m_state);
     RegisterPacket<AuthPacket>("AuthPacket", m_state);
