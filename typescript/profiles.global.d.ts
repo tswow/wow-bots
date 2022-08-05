@@ -26,6 +26,7 @@ declare class PacketBase {
     Reserve(amount: number): this
     Seek(pos: number): this
     Reset(): this
+    Send(bot: Bot): void
 }
 
 declare class WorldPacket extends PacketBase {

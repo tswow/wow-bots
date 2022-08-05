@@ -52,6 +52,7 @@ auto RegisterPacket(std::string const& name, sol::state& state)
         }
         return target.WriteBytes<std::vector<uint8_t>>(vec);
     });
+    type.set_function("Send", &T::Send);
     return type;
 }
 
