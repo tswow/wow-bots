@@ -1,14 +1,5 @@
 include(FetchContent)
 
-if(NOT magic_enum_POPULATED)
-  FetchContent_Declare(
-    magic_enum
-    GIT_REPOSITORY https://github.com/Neargye/magic_enum
-    GIT_TAG        master
-  )
-  FetchContent_MakeAvailable(magic_enum)
-endif()
-
 if(NOT thread_pool_POPULATED)
   FetchContent_Declare(
     thread_pool
@@ -80,7 +71,6 @@ add_library(bots SHARED ${BOT_SOURCES} bots.conf)
 target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json BehaviorTree)
 
 target_include_directories(bots PRIVATE 
-  ${magic_enum_SOURCE_DIR}/include
   ${thread_pool_SOURCE_DIR}
   ${cxxopts_include}
   ${sol2_SOURCE_DIR}/include

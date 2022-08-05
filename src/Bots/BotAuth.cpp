@@ -24,7 +24,6 @@
 #include "BigNumber.h"
 #include "CryptoHash.h"
 #include "CryptoRandom.h"
-#include "magic_enum.hpp"
 
 #include <iterator>
 #include <algorithm>
@@ -51,6 +50,31 @@ enum class AuthResult : uint8_t
     PARENTAL_CONTROL = 0x0f
 };
 
+std::string AuthResultString(AuthResult result)
+{
+    switch (result)
+    {
+    case AuthResult::SUCCESS: return "SUCCESS";
+    case AuthResult::FAILURE: return "FAILURE";
+    case AuthResult::UNKNOWN1: return "UNKNOWN1";
+    case AuthResult::ACCOUNT_BANNED: return "ACCOUNT_BANNED";
+    case AuthResult::NO_MATCH: return "NO_MATCH";
+    case AuthResult::UNKNOWN2: return "UNKNOWN2";
+    case AuthResult::ACCOUNT_IN_USE: return "ACCOUNT_IN_USE";
+    case AuthResult::PREPAID_TIME_LIMIT: return "PREPAID_TIME_LIMIT";
+    case AuthResult::SERVER_FULL: return "SERVER_FULL";
+    case AuthResult::WRONG_BUILD_NUMBER: return "WRONG_BUILD_NUMBER";
+    case AuthResult::UPDATE_CLIENT: return "UPDATE_CLIENT";
+    case AuthResult::UNKNOWN3: return "UNKNOWN3";
+    case AuthResult::ACCOUNT_FREEZED: return "ACCOUNT_FREEZED";
+    case AuthResult::UNKNOWN4: return "UNKNOWN4";
+    case AuthResult::UNKNOWN5: return "UNKNOWN5";
+    case AuthResult::PARENTAL_CONTROL: return "PARENTAL_CONTROL";
+    default:
+        return "INVALID_AUTH_RESULT";
+    }
+}
+
 enum class AuthCommand : uint8_t
 {
     LOGON_CHALLENGE   = 0x00,
@@ -62,6 +86,23 @@ enum class AuthCommand : uint8_t
     TRANSFER_RESUME   = 0x33,
     TRANSFER_CANCEL   = 0x34
 };
+
+std::string AuthCommandString(AuthCommand result)
+{
+    switch (result)
+    {
+    case AuthCommand::LOGON_CHALLENGE: return "LOGON_CHALLENGE";
+    case AuthCommand::LOGON_PROOF: return "LOGON_PROOF";
+    case AuthCommand::REALM_LIST: return "REALM_LIST";
+    case AuthCommand::TRANSFER_INITIATE: return "TRANSFER_INITIATE";
+    case AuthCommand::TRANSFER_DATA: return "TRANSFER_DATA";
+    case AuthCommand::TRANSFER_ACCEPT: return "TRANSFER_ACCEPT";
+    case AuthCommand::TRANSFER_RESUME: return "TRANSFER_RESUME";
+    case AuthCommand::TRANSFER_CANCEL: return "TRANSFER_CANCEL";
+    default:
+        return "INVALID_AUTH_COMMAND";
+    }
+}
 
 #pragma pack(push,1)
 struct ClientAuthChallenge
@@ -117,13 +158,13 @@ static void AssertAuthCommand(AuthCommand expected, AuthCommand com, AuthResult 
 {
     if (res != AuthResult::SUCCESS)
     {
-        throw std::runtime_error("Auth failure: " + std::string(magic_enum::enum_name(res)) + " (" + std::to_string(uint32_t(res)) + ")");
+        throw std::runtime_error("Auth failure: " + AuthResultString(res) + " (" + std::to_string(uint32_t(res)) + ")");
     }
 
     if (expected != com)
     {
-        std::string exprs = std::string(magic_enum::enum_name(expected));
-        std::string coms = std::string(magic_enum::enum_name(com));
+        std::string exprs = std::string(AuthCommandString(expected));
+        std::string coms = std::string(AuthCommandString(com));
         throw std::runtime_error("Invalid auth command: Expected " + exprs + " but got " + coms + "(" + std::to_string(uint32_t(com)) + ")");
     }
 }

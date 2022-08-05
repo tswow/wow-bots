@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 enum class Opcodes : uint32_t
 {
@@ -1334,3 +1335,5 @@ enum class Opcodes : uint32_t
     NUM_MSG_TYPES = 0x520
     // @tswow-end
 };
+
+std::string OpcodeString(Opcodes opcode);
