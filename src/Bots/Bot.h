@@ -21,9 +21,15 @@
 
 #include <string>
 #include <optional>
+#include <variant>
+#include <memory>
 
 class BotThread;
 class BotProfile;
+class Bot;
+
+template<typename C, typename LC, typename DC>
+class TreeExecutor;
 
 class Bot
 {
@@ -32,12 +38,15 @@ class Bot
     std::string m_password;
     std::string m_authserverIp;
     bool m_disconnected;
-    BotProfile m_cached_events;
+    std::unique_ptr<TreeExecutor<Bot,std::monostate,std::monostate>> m_behavior;
     std::string m_events;
+    BotProfile m_cached_events;
     std::optional<Trinity::Crypto::ARC4> m_encrypt;
     std::optional<Trinity::Crypto::ARC4> m_decrypt;
     std::optional<BotSocket> m_worldSocket;
     std::optional<BotSocket> m_authSocket;
+    boost::asio::awaitable<void> WorldPacketLoop();
+    void LoadScripts();
 public:
     // Disconnects auth/world connections immediately. Not thread-safe.
     void DisconnectNow();

@@ -21,6 +21,7 @@
 #include "BotLua.h"
 #include "BotLogging.h"
 #include "Config.h"
+#include "BehaviorTree.h"
 
 #include "boost/asio.hpp"
 
@@ -38,6 +39,15 @@ boost::asio::awaitable<void> BotThread::run()
         boost::asio::deadline_timer t(executor, boost::posix_time::milliseconds(5));
         co_await t.async_wait(boost::asio::use_awaitable);
         {
+            for (auto& [_, bot] : m_botsWithAI)
+            {
+                if (bot->m_behavior)
+                {
+                    bot->m_behavior->Update(*bot, 0);
+                }
+            }
+
+
             if (m_queuedLogins.size() > 0 || m_queuedRemoves.size() > 0 || m_shouldReload)
             {
                 std::scoped_lock lock(sBotMgr->m_botMutex);
@@ -53,7 +63,7 @@ boost::asio::awaitable<void> BotThread::run()
                     {
                         continue;
                     }
-
+                    bot->LoadScripts();
                     boost::asio::co_spawn(executor, bot->Connect(executor, "127.0.0.1"), boost::asio::detached);
                 }
                 m_queuedLogins.clear();
@@ -70,21 +80,26 @@ boost::asio::awaitable<void> BotThread::run()
                     {
                         continue;
                     }
+                    if (bot->m_behavior != nullptr)
+                    {
+                        m_botsWithAI.erase(str);
+                    }
                     bot->DisconnectNow();
                     sBotMgr->m_bots.erase(str);
                 }
 
                 if (m_shouldReload)
                 {
+                    m_botsWithAI.clear();
+                    m_events->Reset();
+                    m_lua->Reload(this);
                     for (auto& bot : sBotMgr->m_bots)
                     {
                         if (bot.second->m_thread == this)
                         {
-                            bot.second->m_cached_events = BotProfile();
+                            bot.second->LoadScripts();
                         }
                     }
-                    m_events->Reset();
-                    m_lua->Reload(this);
                     m_shouldReload = false;
                 }
             }

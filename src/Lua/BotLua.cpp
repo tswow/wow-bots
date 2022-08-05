@@ -22,6 +22,8 @@
 #include "BotLogging.h"
 #include "Config.h"
 
+#include "BehaviorTree.h"
+
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -56,10 +58,14 @@ void RegisterPacket(std::string const& name, sol::state& state)
 void BotLua::Reload(BotThread* thread)
 {
     m_state = sol::state();
+
+    LuaRegisterBehaviorTree<Bot,std::monostate,std::monostate>(m_state,"BotLua",thread->m_events->GetBehaviorTreeContext(),"Bot");
+
     RegisterSharedLua(m_state);
     auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
     LBotProfile.set("Events", &BotProfile::Events);
     LBotProfile.set_function("Register", &BotProfile::Register);
+    LBotProfile.set_function("SetBehaviorRoot", &BotProfile::SetBehaviorRoot);
 
     auto LBotEvents = m_state.new_usertype<BotProfile::BotEvents>("BotEvents");
     LBotEvents.set_function("OnWorldPacket", sol::overload(&BotProfile::BotEvents::_LOnWorldPacket,&BotProfile::BotEvents::LidOnWorldPacket));

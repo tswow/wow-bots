@@ -21,6 +21,8 @@
 #include "BotLogging.h"
 #include "HMAC.h"
 
+#include "BehaviorTree.h"
+
 #include "boost/asio/high_resolution_timer.hpp"
 #include <chrono>
 
@@ -96,10 +98,6 @@ BotSocket& Bot::GetAuthSocket()
 
 BotProfile Bot::GetEvents()
 {
-    if (!m_cached_events.IsLoaded())
-    {
-        m_cached_events = m_thread->m_events->GetEvents(m_events);
-    }
     return m_cached_events;
 }
 
@@ -117,23 +115,8 @@ void Bot::SetEncryptionKey(std::array<uint8_t, 40> const& key)
     m_decrypt.value().UpdateData(arr);
 }
 
-boost::asio::awaitable<void> Bot::Connect(boost::asio::any_io_executor& exec, std::string const& authServerIp)
+boost::asio::awaitable<void> Bot::WorldPacketLoop()
 {
-    DisconnectNow();
-
-    BOT_LOG_DEBUG("bot","Logging in %s", GetUsername().c_str());
-    try
-    {
-        co_await sAuthMgr->AuthenticateBot(exec, authServerIp, *this);
-    }
-    catch (std::exception const& e)
-    {
-        BOT_LOG_ERROR("bot","Error logging in  bot %s: %s",m_username.c_str(),e.what());
-        co_return;
-    }
-
-    BOT_LOG_DEBUG("bot","Successfully logged in as %s", GetUsername().c_str());
-
     for (;;)
     {
         try
@@ -154,5 +137,35 @@ boost::asio::awaitable<void> Bot::Connect(boost::asio::any_io_executor& exec, st
             // TODO: filter by exception type
             break;
         }
+    }
+}
+
+boost::asio::awaitable<void> Bot::Connect(boost::asio::any_io_executor& exec, std::string const& authServerIp)
+{
+    DisconnectNow();
+
+    BOT_LOG_DEBUG("bot","Logging in %s", GetUsername().c_str());
+    try
+    {
+        co_await sAuthMgr->AuthenticateBot(exec, authServerIp, *this);
+    }
+    catch (std::exception const& e)
+    {
+        BOT_LOG_ERROR("bot","Error logging in  bot %s: %s",m_username.c_str(),e.what());
+        co_return;
+    }
+
+    BOT_LOG_DEBUG("bot","Successfully logged in as %s", GetUsername().c_str());
+    co_await WorldPacketLoop();
+}
+
+void Bot::LoadScripts()
+{
+    m_behavior = nullptr;
+    m_cached_events = m_thread->m_events->GetEvents(m_events);
+    if (m_cached_events.m_root)
+    {
+        m_behavior = std::make_unique<TreeExecutor<Bot, std::monostate, std::monostate>>(m_thread->m_events->GetBehaviorTreeContext(),m_cached_events.m_root);
+        m_thread->m_botsWithAI[this->m_username] = this;
     }
 }

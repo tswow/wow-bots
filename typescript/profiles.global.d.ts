@@ -1,5 +1,4 @@
 declare type EventID = number | number[];
-
 declare class PacketBase {
     WriteBytes(arr: number[]): this;
     WriteString(str: string): this;
@@ -86,9 +85,18 @@ declare class BotEvents {
 
 declare class BotProfile {
     Events: BotEvents;
+    SetBehaviorRoot(node: RootNode<Bot,void,void>)
 }
 declare const RootBot: BotProfile
 declare function CreateBotProfile(): BotProfile
 
 declare function CreateAuthPacket(size?: number): AuthPacket
 declare function CreateWorldPacket(opcode: Opcodes, size?: number): AuthPacket
+
+// ============================================================================
+// Behavior Tree
+// ============================================================================
+declare function BotCreateLeaf(callback: LeafCallback<Bot,monostate>): Leaf<Bot,monostate,monostate>
+declare function BotCreateMultiplexer(callback?: LeafCallback<Bot,monostate>): Multiplexer<Bot,monostate,monostate>
+declare function BotCreateSequence(): Branch<Bot,monostate,monostate>
+declare function BotCreateSelector(): Branch<Bot,monostate,monostate>

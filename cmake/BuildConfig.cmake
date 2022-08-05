@@ -5,11 +5,15 @@ file(READ ${SDIR}/typescript/profiles.global.d.ts PROFILES_FILE)
 file(READ ${SDIR}/typescript/commands.global.d.ts COMMANDS_FILE)
 file(READ ${SDIR}/typescript/opcodes.global.d.ts OPCODES_FILE)
 
+file(READ ${BTSDIR}/behaviortree.global.d.ts BEHAVIORTREE_FILE)
+
 file(WRITE ${BDIR}/profiles/global.d.ts "${OPCODES_FILE}")
 file(WRITE ${BDIR}/commands/global.d.ts "${OPCODES_FILE}")
 
 file(APPEND ${BDIR}/profiles/global.d.ts "\n\n${SHARED_FILE}")
 file(APPEND ${BDIR}/commands/global.d.ts "\n\n${SHARED_FILE}")
+
+file(APPEND ${BDIR}/profiles/global.d.ts "\n\n${BEHAVIORTREE_FILE}")
 
 file(APPEND ${BDIR}/profiles/global.d.ts "\n\n${PROFILES_FILE}")
 file(APPEND ${BDIR}/commands/global.d.ts "\n\n${COMMANDS_FILE}")

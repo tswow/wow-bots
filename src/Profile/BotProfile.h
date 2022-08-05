@@ -26,9 +26,16 @@
 #include <map>
 #include <set>
 #include <cstdint>
+#include <variant>
 
 class Bot;
 class BotProfileMgr;
+
+template <typename C, typename LC, typename DC>
+class Node;
+
+template <typename C, typename LC, typename DC>
+class BehaviorTreeContext;
 
 class BotProfileData
 {
@@ -82,13 +89,16 @@ public:
     private:
         BotProfile* m_profile;
     } Events;
+    void SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root);
     void Register(std::string const& mod, std::string const& name);
     BotProfile();
     bool IsLoaded();
 private:
     BotProfileData * m_storage = nullptr;
+    Node<Bot, std::monostate, std::monostate>* m_root = nullptr;
     BotProfile(BotProfileData* data);
     friend class BotProfileMgr;
+    friend class Bot;
 };
 
 class BotThread;
@@ -100,6 +110,7 @@ public:
     BotProfile CreateEvents(std::vector<BotProfile> const& parents);
     BotProfile GetEvents(std::string const& events);
     BotProfile GetRootEvent();
+    BehaviorTreeContext<Bot, std::monostate, std::monostate>* GetBehaviorTreeContext();
     BotProfileMgr();
     static BotProfileData* GetStorage(BotProfile const& events);
 private:
@@ -107,5 +118,6 @@ private:
     void ApplyParents(BotProfileData* target, BotProfileData* cur, std::set<BotProfileData*>& visited);
     std::vector<std::unique_ptr<BotProfileData>> m_events;
     std::map<std::string, BotProfileData*> m_namedEvents;
+    std::unique_ptr<BehaviorTreeContext<Bot, std::monostate, std::monostate>> m_btContext;
     friend class BotProfile;
 };

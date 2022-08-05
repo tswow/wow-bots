@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "BotProfile.h"
+#include "BehaviorTree.h"
 
 #include <set>
 #include <map>
@@ -34,6 +35,7 @@ void BotProfileMgr::Reset()
     m_events.clear();
     m_events.push_back(std::unique_ptr<BotProfileData>(new BotProfileData(this)));
     m_namedEvents[ROOT_EVENT_NAME] = m_events[0].get();
+    m_btContext = std::make_unique<BehaviorTreeContext<Bot, std::monostate, std::monostate>>();
 }
 
 BotProfile BotProfileMgr::GetRootEvent()
@@ -45,6 +47,11 @@ BotProfile BotProfileMgr::GetRootEvent()
 BotProfileMgr::BotProfileMgr()
 {
     Reset();
+}
+
+BehaviorTreeContext<Bot, std::monostate, std::monostate>* BotProfileMgr::GetBehaviorTreeContext()
+{
+    return m_btContext.get();
 }
 
 BotProfile BotProfileMgr::CreateEvents(std::vector<BotProfile> const& parents)
@@ -155,6 +162,11 @@ void BotProfile::Register(std::string const& mod, std::string const& name)
     namedEvents[merged] = m_storage;
 }
 
+void BotProfile::SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root)
+{
+    m_root = root;
+}
+
 BotProfile BotProfileMgr::GetEvents(std::string const& events)
 {
     auto itr = m_namedEvents.find(events);
@@ -174,4 +186,3 @@ BotProfileData* BotProfileMgr::GetStorage(BotProfile const& events)
 {
     return events.m_storage;
 }
-

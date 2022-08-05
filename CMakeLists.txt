@@ -41,6 +41,15 @@ elseif(NOT cxxopts_POPULATED)
   set(cxxopts_include ${cxxopts_SOURCE_DIR}/include)
 endif()
 
+if(NOT TARGET BehaviorTree)
+  FetchContent_Declare(
+    behaviortree
+    GIT_REPOSITORY https://github.com/tswow/behavior-tree.git
+    GIT_TAG        master
+  )
+  FetchContent_MakeAvailable(behaviortree)
+endif()
+
 # borrowed function from trinitycore
 function(CollectIncludeDirectories current_dir variable)
   list(FIND ARGN "${current_dir}" IS_EXCLUDED)
@@ -68,7 +77,7 @@ foreach(source ${BOT_SOURCES_REL})
 endforeach()
 
 add_library(bots SHARED ${BOT_SOURCES} bots.conf)
-target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json)
+target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json BehaviorTree)
 
 target_include_directories(bots PRIVATE 
   ${magic_enum_SOURCE_DIR}/include
@@ -85,6 +94,7 @@ add_custom_command(
   TARGET bots
   POST_BUILD
   COMMAND ${CMAKE_COMMAND}
+    -DBTSDIR=${behaviortree_SOURCE_DIR}
     -DSDIR=${CMAKE_CURRENT_SOURCE_DIR}
     -DBDIR="${CMAKE_BINARY_DIR}/bin/$<CONFIG>/"
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/BuildConfig.cmake

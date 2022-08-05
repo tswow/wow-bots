@@ -49,6 +49,7 @@ private:
     uint32_t m_threadId;
     std::vector<std::string> m_queuedLogins;
     std::vector<std::string> m_queuedRemoves;
+    std::map<std::string, Bot*> m_botsWithAI;
     int m_bot_count = 0;
     std::atomic<bool> m_shouldReload = true;
     friend class Bot;
