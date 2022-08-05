@@ -18,6 +18,8 @@
 #include "BotLogging.h"
 #include "Map/BotMapDataMgr.h"
 
+#include "BotOpcodes.h"
+
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -101,5 +103,9 @@ void RegisterSharedLua(sol::state & state)
         std::stringstream sstream;
         sstream << ifs.rdbuf();
         return sstream.str();
+    });
+
+    state.set_function("OpcodeString", [](double opcode) {
+        return OpcodeString(Opcodes(opcode));
     });
 }
