@@ -18,3 +18,7 @@ declare function WriteFile(path: string, value: string)
 declare function ReadFile(path: string): string
 
 declare function OpcodeString(opcode: number): string
+
+declare function TAG(mod: string, id: string): TSArray<uint32>
+declare function UTAG(mod: string, id: string): TSNumber<uint32>
+declare function HAS_TAG(item: uint32, mod: string, id: string): bool
