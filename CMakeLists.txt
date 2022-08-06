@@ -59,6 +59,7 @@ endfunction()
 CollectIncludeDirectories(${CMAKE_CURRENT_SOURCE_DIR}/src BOT_INCLUDE_DIRS)
 file(GLOB_RECURSE BOT_SOURCES_REL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src *.cpp *.h)
 list(FILTER BOT_SOURCES_REL EXCLUDE REGEX "../app/.*" )
+list(FILTER BOT_SOURCES_REL EXCLUDE REGEX "../packets/.*" )
 set(BOT_SOURCES "")
 foreach(source ${BOT_SOURCES_REL})
     get_filename_component(source_path "${source}" PATH)
@@ -77,6 +78,7 @@ target_include_directories(bots PRIVATE
   ${LUA_ROOT}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/Map
+  ${CMAKE_CURRENT_SOURCE_DIR}/packets.generated
   ${BOT_INCLUDE_DIRS}
 )
 
@@ -99,3 +101,21 @@ target_include_directories(bots-app PRIVATE
 )
 
 set_property(TARGET bots PROPERTY CXX_STANDARD 20)
+
+# Packet builder
+
+file(GLOB packet_headers "${CMAKE_CURRENT_SOURCE_DIR}/packets/*.h")
+add_executable(packets packets/packet-builder.cpp
+  ${packet_headers}
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Bots/BotOpcodes.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Bots/BotOpcodes.cpp
+)
+add_custom_target(packets-run
+    COMMAND packets
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating packets"
+    SOURCES packets/packet-builder.cpp
+)
+add_dependencies(bots packets-run)
+add_dependencies(packets-run packets)
+set_property(TARGET packets PROPERTY CXX_STANDARD 17)

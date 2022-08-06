@@ -73,6 +73,7 @@ public:
         memcpy(m_data.data() + size, &value, sizeof(T));\
         return *this;\
     }\
+    type& WritePadding(uint32_t padding);\
     type& WriteUInt8(uint8_t value);\
     type& WriteInt8(int8_t value);\
     type& WriteUInt16(uint16_t value);\

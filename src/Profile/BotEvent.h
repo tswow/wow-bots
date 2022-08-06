@@ -19,6 +19,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 
 #include "sol/sol.hpp"
 
@@ -112,7 +113,7 @@ protected:
 };
 
 #define EVENT_STORAGE(name,...) \
-		using name##__type = void (*)(__VA_ARGS__);\
+		using name##__type = std::function<void(__VA_ARGS__)>;\
 		TSEvent<name##__type> name##_callbacks;\
 
 #define EVENT_ROOT(name,is_fn,fn_cxx,fn_lua) \

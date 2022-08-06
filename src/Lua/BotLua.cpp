@@ -23,6 +23,9 @@
 #include "Config.h"
 #include "BehaviorTree.h"
 
+#include "Packets.h"
+#include "PacketLua.h"
+
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -61,8 +64,9 @@ void BotLua::Reload(BotThread* thread)
     m_state = sol::state();
 
     LuaRegisterBehaviorTree<Bot,std::monostate,std::monostate>(m_state,"BotLua",thread->m_events->GetBehaviorTreeContext(),"Bot");
-
     RegisterSharedLua(m_state);
+    RegisterPacketLua(m_state);
+
     auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
     LBotProfile.set_function("Register", &BotProfile::Register);
     LBotProfile.set_function("SetBehaviorRoot", &BotProfile::SetBehaviorRoot);
@@ -75,6 +79,8 @@ void BotLua::Reload(BotThread* thread)
     LBotProfile.set_function("OnCloseAuthConnection", &BotProfile::LOnCloseAuthConnection);
     LBotProfile.set_function("OnWorldAuthChallenge", &BotProfile::LOnWorldAuthChallenge);
     LBotProfile.set_function("OnWorldAuthResponse", &BotProfile::LOnWorldAuthResponse);
+
+    LUA_EVENTS(LBotProfile);
 
     auto worldpacket = RegisterPacket<WorldPacket>("WorldPacket", m_state);
     worldpacket.set_function("GetOpcode", &WorldPacket::GetOpcode);

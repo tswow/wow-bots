@@ -40,6 +40,7 @@
     type& type::WriteInt64(int64_t value) { return Write<int64_t>(value);}\
     type& type::WriteFloat(float value) { return Write<float>(value);}\
     type& type::WriteDouble(double value) { return Write<double>(value);}\
+    type& type::WritePadding(uint32_t padding) { m_data.resize(m_data.size() + padding); return *this;}\
 
 
 PacketBase::PacketBase(std::vector<uint8_t> const& data)

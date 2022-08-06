@@ -22,6 +22,8 @@
 #include "BotMutable.h"
 #include "BotConfig.h"
 
+#include "PacketsFwd.h"
+
 #include <vector>
 #include <map>
 #include <set>
@@ -84,6 +86,7 @@ public:
     EVENT(OnWorldAuthChallenge)
     EVENT(OnWorldAuthResponse)
     ID_EVENT(OnWorldPacket)
+    PACKET_EVENTS_DECL
     void SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root);
     void Register(std::string const& mod, std::string const& name);
     BotProfile();

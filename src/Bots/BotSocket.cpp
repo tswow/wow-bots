@@ -90,6 +90,8 @@ boost::asio::awaitable<std::vector<uint8_t>> BotSocket::ReadVector(uint32_t size
 
 void BotSocket::WriteVectorNoWait(std::vector<uint8_t> const& value)
 {
-    boost::asio::async_write(m_worldSocket, boost::asio::buffer(value), [](auto a, auto b) {});
+    char* arr = new char[value.size()];
+    memcpy(arr, value.data(), value.size());
+    boost::asio::async_write(m_worldSocket, boost::asio::buffer(arr, value.size()), [=](auto a, auto b) { delete[] arr; });
 }
 
