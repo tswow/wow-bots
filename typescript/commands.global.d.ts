@@ -13,3 +13,11 @@ declare class BotCommandBuilder {
 declare function CreateCommand(name: string): BotCommandBuilder
 
 declare function StartBot(username: string, password: string, )
+
+declare class BotAccount {
+    GetUsername(): string;
+    GetPassword(): string
+}
+declare function GetBotAccount(id: number): BotAccount;
+declare function GetBotAccounts(ids: number[]): BotAccount[];
+

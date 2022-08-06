@@ -20,6 +20,7 @@
 #include "BotLogging.h"
 #include "BotLuaShared.h"
 #include "Config.h"
+#include "BotAccounts.h"
 
 #include <filesystem>
 
@@ -29,6 +30,21 @@ void BotLuaCommand::Reload()
 {
     m_state = sol::state();
     RegisterSharedLua(m_state);
+
+    auto LBotAccount = m_state.new_usertype<BotAccount>("BotAccount");
+    LBotAccount.set_function("GetUsername", &BotAccount::GetUsername);
+    LBotAccount.set_function("GetPassword", &BotAccount::GetPassword);
+
+    m_state.set_function("GetBotAccount", GetBotAccount);
+    m_state.set_function("GetBotAccounts", [](sol::table table) {
+        std::vector<uint32_t> vec;
+        vec.resize(table.size());
+        for (auto& [key,value] : table)
+        {
+            vec.push_back(value.as<uint32_t>());
+        }
+        return sol::as_table(GetBotAccounts(vec));
+    });
 
     auto LBotCommandBuilder = m_state.new_usertype<BotCommandBuilder>("BotCommandBuilder");
     LBotCommandBuilder.set_function("AddStringParam", sol::overload(

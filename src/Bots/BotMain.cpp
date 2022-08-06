@@ -19,6 +19,7 @@
 #include "BotCommandMgr.h"
 #include "BotProfile.h"
 #include "BotLogging.h"
+#include "BotAccounts.h"
 #include "Map/BotMapDataMgr.h"
 
 #include "Config.h"
@@ -38,6 +39,7 @@ void TC_BOT_API BotMain()
         BOT_LOG_ERROR("main","Loading configuration error: %s",error.c_str());
     }
 
+    ReloadAccounts();
     sBotMapDataMgr->Setup();
     sBotMgr->Initialize();
     sBotCommandMgr->Reload();
@@ -51,6 +53,7 @@ void TC_BOT_API BotMain()
             {
                 sBotCommandMgr->Reload();
                 sBotMgr->Reload();
+                ReloadAccounts();
             }
             else
             {
