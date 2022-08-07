@@ -264,7 +264,7 @@ void BotCommandMgr::Reload()
     RegisterBaseCommands();
     if (sConfigMgr->GetBoolDefault("Lua.Enabled", true))
     {
-        m_lua.Reload();
+        m_lua.Start();
     }
 }
 

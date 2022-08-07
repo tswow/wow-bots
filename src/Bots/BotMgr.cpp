@@ -18,7 +18,7 @@
 #include "Bot.h"
 #include "BotAuth.h"
 #include "BotProfile.h"
-#include "BotLua.h"
+#include "BotProfileLua.h"
 #include "BotLogging.h"
 #include "Config.h"
 #include "BehaviorTree.h"
@@ -98,7 +98,8 @@ boost::asio::awaitable<void> BotThread::run()
                 {
                     m_botsWithAI.clear();
                     m_events->Reset();
-                    m_lua->Reload(this);
+                    m_lua = std::make_unique<BotProfileLua>(this);
+                    m_lua->Start();
                     for (auto& bot : sBotMgr->m_bots)
                     {
                         if (bot.second->m_thread == this)
@@ -115,7 +116,6 @@ boost::asio::awaitable<void> BotThread::run()
 
 BotThread::BotThread()
     : m_events(std::make_unique<BotProfileMgr>())
-    , m_lua(std::make_unique<BotLua>())
     , m_threadId(UINT32_MAX)
 {
 }

@@ -14,6 +14,30 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma once
 #include <sol/sol.hpp>
 
-void RegisterSharedLua(sol::state & state);
+#include <filesystem>
+#include <map>
+#include <vector>
+
+namespace fs = std::filesystem;
+
+class BotLuaState
+{
+public:
+    BotLuaState(fs::path const& rootPath);
+    void Start();
+protected:
+    virtual void LoadLibraries() = 0;
+    sol::state m_state;
+    fs::path m_rootPath;
+    fs::path m_curPath;
+    std::vector<fs::path> m_fileStack;
+    bool m_alreadyErrored;
+    std::map<fs::path, sol::table> m_modules;
+    fs::path FindLuaModule(std::string target);
+    sol::table require(std::string const& mod);
+    void ExecuteFile(fs::path file);
+    void LoadBaseLibraries();
+};

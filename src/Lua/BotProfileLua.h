@@ -16,13 +16,17 @@
  */
 #pragma once
 
+#include "BotLuaShared.h"
+
 #include <sol/sol.hpp>
 #include <filesystem>
 
 class BotThread;
-class BotLua
+class BotProfileLua : public BotLuaState
 {
-    sol::state m_state;
+    BotThread* m_thread;
+protected:
+    void LoadLibraries() override;
 public:
-    void Reload(BotThread* thread);
+    BotProfileLua(BotThread* thread);
 };

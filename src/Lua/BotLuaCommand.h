@@ -16,11 +16,12 @@
  */
 #pragma once
 
-#include <sol/sol.hpp>
+#include "BotLuaShared.h"
 
-class BotLuaCommand
+class BotLuaCommand : public BotLuaState
 {
-    sol::state m_state;
 public:
-    void Reload();
+    BotLuaCommand();
+protected:
+    void LoadLibraries() override;
 };

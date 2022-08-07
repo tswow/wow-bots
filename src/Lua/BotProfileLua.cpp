@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "BotLua.h"
+#include "BotProfileLua.h"
 #include "Bot.h"
 #include "BotProfile.h"
 #include "BotMutable.h"
@@ -59,12 +59,14 @@ auto RegisterPacket(std::string const& name, sol::state& state)
     return type;
 }
 
-void BotLua::Reload(BotThread* thread)
-{
-    m_state = sol::state();
+BotProfileLua::BotProfileLua(BotThread* thread)
+    : BotLuaState(fs::path(sConfigMgr->GetStringDefault("Lua.Path", "./")) / "profiles")
+    , m_thread(thread)
+{}
 
-    LuaRegisterBehaviorTree<Bot,std::monostate,std::monostate>(m_state,"BotLua",thread->m_events->GetBehaviorTreeContext(),"Bot");
-    RegisterSharedLua(m_state);
+void BotProfileLua::LoadLibraries()
+{
+    LuaRegisterBehaviorTree<Bot,std::monostate,std::monostate>(m_state,"BotLua",m_thread->m_events->GetBehaviorTreeContext(),"Bot");
     RegisterPacketLua(m_state);
 
     auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
@@ -101,9 +103,9 @@ void BotLua::Reload(BotThread* thread)
         []() { return AuthPacket(); }
     ));
 
-    m_state.set("RootBot", BotProfile(thread->m_events->GetRootEvent()));
+    m_state.set("RootBot", BotProfile(m_thread->m_events->GetRootEvent()));
     m_state.set_function("CreateBotProfile", sol::overload(
-        [thread](sol::table parentsTable) {
+        [this](sol::table parentsTable) {
             std::vector<BotProfile> parents;
             for (auto [key, value] : parentsTable)
             {
@@ -112,10 +114,10 @@ void BotLua::Reload(BotThread* thread)
                     parents.push_back(value.as<BotProfile>());
                 }
             }
-            return thread->m_events->CreateEvents(parents);
+            return m_thread->m_events->CreateEvents(parents);
         },
-        [thread]() {
-            return thread->m_events->CreateEvents({});
+        [this]() {
+            return m_thread->m_events->CreateEvents({});
         }
     ));
 
@@ -125,16 +127,4 @@ void BotLua::Reload(BotThread* thread)
     LBot.set_function("GetPassword", &Bot::GetPassword);
 
     fs::path path = fs::path(sConfigMgr->GetStringDefault("Lua.Path","./")) / "profiles";
-
-    if (std::filesystem::exists(path))
-    {
-        for (const std::filesystem::directory_entry& dir_entry :
-            std::filesystem::recursive_directory_iterator(path))
-        {
-            if (std::filesystem::is_regular_file(dir_entry.path()) && dir_entry.path().extension() == ".lua")
-            {
-                m_state.safe_script_file(dir_entry.path().string());
-            }
-        }
-    }
 }

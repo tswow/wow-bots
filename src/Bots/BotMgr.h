@@ -32,7 +32,7 @@
 
 class Bot;
 class BotProfile;
-class BotLua;
+class BotProfileLua;
 class BotProfileMgr;
 
 class BotThread
@@ -41,8 +41,8 @@ public:
     void start(int thread);
     void Reload();
     BotThread();
-    std::unique_ptr<BotProfileMgr> m_events;
-    std::unique_ptr<BotLua> m_lua;
+    std::unique_ptr<BotProfileMgr> m_events = nullptr;
+    std::unique_ptr<BotProfileLua> m_lua = nullptr;
     ~BotThread();
 private:
     boost::asio::awaitable<void> run();

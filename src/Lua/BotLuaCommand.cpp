@@ -26,11 +26,12 @@
 
 namespace fs = std::filesystem;
 
-void BotLuaCommand::Reload()
-{
-    m_state = sol::state();
-    RegisterSharedLua(m_state);
+BotLuaCommand::BotLuaCommand()
+    : BotLuaState(fs::path(sConfigMgr->GetStringDefault("Lua.Path", "./")) / "commands")
+{}
 
+void BotLuaCommand::LoadLibraries()
+{
     auto LBotAccount = m_state.new_usertype<BotAccount>("BotAccount");
     LBotAccount.set_function("GetUsername", &BotAccount::GetUsername);
     LBotAccount.set_function("GetPassword", &BotAccount::GetPassword);

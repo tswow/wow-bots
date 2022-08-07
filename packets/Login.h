@@ -51,3 +51,17 @@ PacketBuilder* CMSGPlayerLogin = PacketBuilder
     ::CreatePacket(Opcodes::CMSG_PLAYER_LOGIN,PacketType::WRITE, "CMSGPlayerLogin")
     ->SingleField("uint64", "GUID")
     ;
+
+PacketBuilder* CMSGCharCreate = PacketBuilder
+    ::CreatePacket(Opcodes::CMSG_CHAR_CREATE, PacketType::WRITE, "CMSGCharCreate")
+    ->SingleField(CString(),"Name")
+    ->SingleField("uint8","Race")
+    ->SingleField("uint8","Class")
+    ->SingleField("uint8","Gender")
+    ->SingleField("uint8","Skin")
+    ->SingleField("uint8","Face")
+    ->SingleField("uint8","HairStyle")
+    ->SingleField("uint8","HairColor")
+    ->SingleField("uint8","FacialHair")
+    ->SingleField("uint8","OutfitID")
+    ;
