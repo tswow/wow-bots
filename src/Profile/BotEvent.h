@@ -203,7 +203,8 @@ protected:
 					try\
 					{\
 						setup\
-						cb(__VA_ARGS__);\
+						auto res = cb(__VA_ARGS__);\
+						if(!res.valid()) { sol::error err = res; throw std::runtime_error(err.what()); }\
 					}\
 					catch (std::exception const& e)\
 					{\
@@ -236,7 +237,8 @@ protected:
 								try\
 								{\
 										setup\
-										cb(__VA_ARGS__);\
+										auto res = cb(__VA_ARGS__);\
+										if(!res.valid()) { sol::error err = res; throw std::runtime_error(err.what()); }\
 								}\
 								catch (std::exception const& e)\
 								{\
