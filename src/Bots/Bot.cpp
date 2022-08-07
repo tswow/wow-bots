@@ -158,6 +158,14 @@ boost::asio::awaitable<void> Bot::Connect(boost::asio::any_io_executor& exec, st
     co_await WorldPacketLoop();
 }
 
+void Bot::UnloadScripts()
+{
+    if (m_data.valid())
+    {
+        m_data.reset();
+    }
+}
+
 void Bot::LoadScripts()
 {
     m_behavior = nullptr;

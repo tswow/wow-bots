@@ -21,10 +21,12 @@
 #include <sol/sol.hpp>
 #include <filesystem>
 
+class Bot;
 class BotThread;
 class BotProfileLua : public BotLuaState
 {
     BotThread* m_thread;
+    void InitializeBotData(Bot* bot);
 protected:
     void LoadLibraries() override;
 public:

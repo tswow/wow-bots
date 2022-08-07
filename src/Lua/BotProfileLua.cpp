@@ -126,5 +126,30 @@ void BotProfileLua::LoadLibraries()
     LBot.set_function("GetUsername", &Bot::GetUsername);
     LBot.set_function("GetPassword", &Bot::GetPassword);
 
+    LBot.set_function("SetData", [this](Bot* bot, std::string const& key, sol::object value) {
+        InitializeBotData(bot);
+        bot->m_data[key] = value;
+        return bot;
+    });
+
+    LBot.set_function("GetData", sol::overload(
+        [this](Bot* bot, std::string const& key, sol::object value) {
+            InitializeBotData(bot);
+            return bot->m_data.get_or(key, value);
+        },
+        [this](Bot* bot, std::string const& key) {
+            InitializeBotData(bot);
+            return bot->m_data[key];
+        }
+    ));
+
     fs::path path = fs::path(sConfigMgr->GetStringDefault("Lua.Path","./")) / "profiles";
+}
+
+void BotProfileLua::InitializeBotData(Bot* bot)
+{
+    if (!bot->m_data.valid())
+    {
+        bot->m_data = m_state.create_table();
+    }
 }

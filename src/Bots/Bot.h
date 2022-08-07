@@ -19,6 +19,8 @@
 #include "BotSocket.h"
 #include "BotProfile.h"
 
+#include <sol/sol.hpp>
+
 #include <string>
 #include <optional>
 #include <variant>
@@ -49,6 +51,7 @@ public:
     friend class WorldPacket;
     friend class BotThread;
     friend class BotMgr;
+    friend class BotProfileLua;
     friend class AuthMgr;
 private:
     BotThread* m_thread;
@@ -63,6 +66,8 @@ private:
     std::optional<Trinity::Crypto::ARC4> m_decrypt;
     std::optional<BotSocket> m_worldSocket;
     std::optional<BotSocket> m_authSocket;
+    sol::table m_data;
     boost::asio::awaitable<void> WorldPacketLoop();
     void LoadScripts();
+    void UnloadScripts();
 };

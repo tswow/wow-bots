@@ -43,6 +43,8 @@ declare class Bot {
     GetUsername(): string
     GetPassword(): string
     GetEvents(): BotEvents
+    GetData<T>(key: string, def?: T): T
+    SetData<T>(key: string, value: T): Bot
 }
 
 

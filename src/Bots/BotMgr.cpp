@@ -96,6 +96,13 @@ boost::asio::awaitable<void> BotThread::run()
 
                 if (m_shouldReload)
                 {
+                    for (auto& bot : sBotMgr->m_bots)
+                    {
+                        if (bot.second->m_thread == this)
+                        {
+                            bot.second->UnloadScripts();
+                        }
+                    }
                     m_botsWithAI.clear();
                     m_events->Reset();
                     m_lua = std::make_unique<BotProfileLua>(this);
