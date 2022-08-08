@@ -22,7 +22,8 @@
 #include "BotLogging.h"
 #include "Config.h"
 #include "BehaviorTree.h"
-
+#include "Movement.h"
+#include "Update.h"
 #include "Packets.h"
 #include "PacketLua.h"
 
@@ -68,6 +69,8 @@ void BotProfileLua::LoadLibraries()
 {
     LuaRegisterBehaviorTree<Bot,std::monostate,std::monostate>(m_state,"BotLua",m_thread->m_events->GetBehaviorTreeContext(),"Bot");
     RegisterPacketLua(m_state);
+    MovementPacket::Register(m_state);
+    UpdateData::Register(m_state);
 
     auto LBotProfile = m_state.new_usertype<BotProfile>("BotProfile");
     LBotProfile.set_function("Register", &BotProfile::Register);
@@ -81,11 +84,24 @@ void BotProfileLua::LoadLibraries()
     LBotProfile.set_function("OnCloseAuthConnection", &BotProfile::LOnCloseAuthConnection);
     LBotProfile.set_function("OnWorldAuthChallenge", &BotProfile::LOnWorldAuthChallenge);
     LBotProfile.set_function("OnWorldAuthResponse", &BotProfile::LOnWorldAuthResponse);
+    LBotProfile.set_function("OnMovementPacket", [](BotProfile& bot, sol::protected_function callback) {
+        bot.OnMovementPacket([=](Bot& bot, MovementPacket packet) {
+            callback(bot, packet);
+        });
+        return bot;
+    });
+    LBotProfile.set_function("OnUpdateData", [](BotProfile& bot, sol::protected_function callback) {
+        bot.OnUpdateData([=](Bot& bot, UpdateDataPacket packet) {
+            callback(bot, packet);
+        });
+        return bot;
+    });
 
     LUA_EVENTS(LBotProfile);
 
     auto worldpacket = RegisterPacket<WorldPacket>("WorldPacket", m_state);
     worldpacket.set_function("GetOpcode", &WorldPacket::GetOpcode);
+    worldpacket.set_function("ReadPackedGUID", &WorldPacket::ReadPackedGUID);
     RegisterPacket<AuthPacket>("AuthPacket", m_state);
 
     m_state.set_function("CreateWorldPacket", sol::overload(

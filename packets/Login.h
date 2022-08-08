@@ -65,3 +65,12 @@ PacketBuilder* CMSGCharCreate = PacketBuilder
     ->SingleField("uint8","FacialHair")
     ->SingleField("uint8","OutfitID")
     ;
+
+PacketBuilder* SMSGLoginVerifyWorld = PacketBuilder
+    ::CreatePacket(Opcodes::SMSG_LOGIN_VERIFY_WORLD, PacketType::READ, "SMSGLoginVerifyWorld")
+    ->SingleField("uint32","Map")
+    ->SingleField("float","X")
+    ->SingleField("float","Y")
+    ->SingleField("float","Z")
+    ->SingleField("float","O")
+    ;

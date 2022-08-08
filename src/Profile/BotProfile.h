@@ -21,6 +21,7 @@
 #include "BotPacket.h"
 #include "BotMutable.h"
 #include "BotConfig.h"
+#include "Movement.h"
 
 #include "PacketsFwd.h"
 
@@ -32,6 +33,8 @@
 
 class Bot;
 class BotProfileMgr;
+class MovementPacket;
+class UpdateDataPacket;
 
 template <typename C, typename LC, typename DC>
 class Node;
@@ -87,8 +90,10 @@ public:
     EVENT(OnWorldAuthResponse)
     ID_EVENT(OnWorldPacket)
     PACKET_EVENTS_DECL
-    void SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root);
-    void Register(std::string const& mod, std::string const& name);
+    BotProfile OnUpdateData(std::function<void(Bot& bot, UpdateDataPacket packet)> callback);
+    BotProfile OnMovementPacket(std::function<void(Bot& bot, MovementPacket packet)> callback);
+    BotProfile SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root);
+    BotProfile Register(std::string const& mod, std::string const& name);
     BotProfile();
     bool IsLoaded();
 private:

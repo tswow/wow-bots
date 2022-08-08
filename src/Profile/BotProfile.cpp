@@ -16,6 +16,7 @@
  */
 #include "BotProfile.h"
 #include "BehaviorTree.h"
+#include "Update.h"
 
 #include <set>
 #include <map>
@@ -145,7 +146,7 @@ BotProfile::BotProfile(BotProfileData* data)
     : m_storage(data)
 {}
 
-void BotProfile::Register(std::string const& mod, std::string const& name)
+BotProfile BotProfile::Register(std::string const& mod, std::string const& name)
 {
     std::string merged = mod + ":" + name;
     auto& namedEvents = m_storage->m_mgr->m_namedEvents;
@@ -154,11 +155,13 @@ void BotProfile::Register(std::string const& mod, std::string const& name)
         throw std::runtime_error("Tried to register event handler " + merged + " twice!");
     }
     namedEvents[merged] = m_storage;
+    return *this;
 }
 
-void BotProfile::SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root)
+BotProfile BotProfile::SetBehaviorRoot(Node<Bot, std::monostate, std::monostate>* root)
 {
     m_storage->m_root = root;
+    return *this;
 }
 
 BotProfile BotProfileMgr::GetEvents(std::string const& events)
@@ -179,4 +182,51 @@ bool BotProfile::IsLoaded()
 BotProfileData* BotProfileMgr::GetStorage(BotProfile const& events)
 {
     return events.m_storage;
+}
+
+BotProfile BotProfile::OnMovementPacket(std::function<void(Bot& bot, MovementPacket packet)> callback)
+{
+    OnWorldPacket(std::vector<uint32_t>({
+        uint32(Opcodes::MSG_MOVE_START_FORWARD),
+        uint32(Opcodes::MSG_MOVE_START_BACKWARD),
+        uint32(Opcodes::MSG_MOVE_STOP),
+        uint32(Opcodes::MSG_MOVE_START_STRAFE_LEFT),
+        uint32(Opcodes::MSG_MOVE_START_STRAFE_RIGHT),
+        uint32(Opcodes::MSG_MOVE_STOP_STRAFE),
+        uint32(Opcodes::MSG_MOVE_JUMP),
+        uint32(Opcodes::MSG_MOVE_START_TURN_LEFT),
+        uint32(Opcodes::MSG_MOVE_START_TURN_RIGHT),
+        uint32(Opcodes::MSG_MOVE_STOP_TURN),
+        uint32(Opcodes::MSG_MOVE_START_PITCH_UP),
+        uint32(Opcodes::MSG_MOVE_START_PITCH_DOWN),
+        uint32(Opcodes::MSG_MOVE_STOP_PITCH),
+        uint32(Opcodes::MSG_MOVE_SET_RUN_MODE),
+        uint32(Opcodes::MSG_MOVE_SET_WALK_MODE),
+        uint32(Opcodes::MSG_MOVE_FALL_LAND),
+        uint32(Opcodes::MSG_MOVE_START_SWIM),
+        uint32(Opcodes::MSG_MOVE_STOP_SWIM),
+        uint32(Opcodes::MSG_MOVE_SET_FACING),
+        uint32(Opcodes::MSG_MOVE_SET_PITCH),
+        uint32(Opcodes::MSG_MOVE_HEARTBEAT),
+        uint32(Opcodes::MSG_MOVE_START_ASCEND),
+        uint32(Opcodes::MSG_MOVE_STOP_ASCEND),
+        uint32(Opcodes::MSG_MOVE_START_DESCEND)
+    }), [=](Bot& bot, WorldPacket& packet) {
+        callback(bot, MovementPacket::Read(packet));
+    });
+
+    return *this;
+}
+
+BotProfile BotProfile::OnUpdateData(std::function<void(Bot& bot, UpdateDataPacket packet)> callback)
+{
+    OnWorldPacket(uint32_t(Opcodes::SMSG_UPDATE_OBJECT), [=](Bot& bot, WorldPacket& packet) {
+        callback(bot, UpdateDataPacket::Read(packet));
+    });
+
+    OnWorldPacket(uint32_t(Opcodes::SMSG_COMPRESSED_UPDATE_OBJECT), [=](Bot& bot, WorldPacket& packet) {
+        callback(bot, UpdateDataPacket::ReadCompressed(packet));
+    });
+
+    return *this;
 }

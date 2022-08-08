@@ -11,6 +11,7 @@ std::vector<std::unique_ptr<PacketBuilder>>& PacketBuilder::GetBuilders()
 int main() {
     // Include your packet definitions here
     #include "Login.h"
+    #include "Movement.h"
 
     // Do not include packet definitions after this call
     PacketBuilder::Generate();

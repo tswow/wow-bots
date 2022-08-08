@@ -241,5 +241,22 @@ void AuthPacket::SendNoWait(Bot& bot)
     bot.GetAuthSocket().WriteVectorNoWait(m_data);
 }
 
+uint64_t WorldPacket::ReadPackedGUID()
+{
+    uint8 mask = ReadUInt8();
+    if (mask == 0)
+        return 0;
+    uint64 res = 0;
+    int i = 0;
+    while (i < 8)
+    {
+        if ((mask & 1 << i) != 0)
+            res += (uint64_t(ReadUInt8())) << (i * 8);
+        i++;
+    }
+    return res;
+}
+
+
 PACKET_WRITE_DEF(WorldPacket)
 PACKET_WRITE_DEF(AuthPacket)
