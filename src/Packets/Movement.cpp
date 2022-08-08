@@ -3,10 +3,20 @@
 #include "Bot.h"
 
 #include <sol/sol.hpp>
+#include <chrono>
+
+static uint64 now()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
+// todo: udb
+uint64 start = now();
 
 MovementPacket MovementPacket::create(Opcodes opcode)
 {
     MovementPacket packet;
+    packet.time = uint32(now() - start);
     packet.opcode = opcode;
     return packet;
 }
@@ -26,6 +36,7 @@ MovementPacket& MovementPacket::SetOpcode(Opcodes _opcode)
 MovementPacket MovementPacket::Read(WorldPacket& packet)
 {
     MovementPacket movement;
+    movement.GUID = packet.ReadPackedGUID();
     movement.opcode = packet.GetOpcode();
     movement.flags = packet.ReadUInt32();
     movement.flags2 = packet.ReadUInt16();
@@ -77,8 +88,9 @@ MovementPacket MovementPacket::Read(WorldPacket& packet)
 WorldPacket MovementPacket::Write()
 {
     WorldPacket packet(opcode);
+    packet.WritePackedGUID(GUID);
     packet.WriteUInt32(flags);
-    packet.WriteUInt32(flags2);
+    packet.WriteUInt16(flags2);
     packet.WriteUInt32(time);
     packet.WriteFloat(x);
     packet.WriteFloat(y);
@@ -103,6 +115,7 @@ WorldPacket MovementPacket::Write()
         packet.WriteFloat(pitch);
     }
 
+    packet.WriteUInt32(fallTime);
 
     if (flags & MOVEMENTFLAG_FALLING)
     {

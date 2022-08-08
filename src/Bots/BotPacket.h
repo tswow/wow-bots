@@ -93,6 +93,7 @@ public:
     WorldPacket(std::vector<uint8_t> const& packet);
     WorldPacket(Opcodes opcode, size_t initialSize = 0);
     uint64_t ReadPackedGUID();
+    void WritePackedGUID(uint64_t guid);
     Opcodes GetOpcode() const;
     void SetOpcode(Opcodes opcode);
     uint16_t GetPayloadSize();

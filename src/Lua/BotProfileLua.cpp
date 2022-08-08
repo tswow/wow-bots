@@ -102,6 +102,7 @@ void BotProfileLua::LoadLibraries()
     auto worldpacket = RegisterPacket<WorldPacket>("WorldPacket", m_state);
     worldpacket.set_function("GetOpcode", &WorldPacket::GetOpcode);
     worldpacket.set_function("ReadPackedGUID", &WorldPacket::ReadPackedGUID);
+    worldpacket.set_function("WritePackedGUID", &WorldPacket::WritePackedGUID);
     RegisterPacket<AuthPacket>("AuthPacket", m_state);
 
     m_state.set_function("CreateWorldPacket", sol::overload(
@@ -146,6 +147,10 @@ void BotProfileLua::LoadLibraries()
         InitializeBotData(bot);
         bot->m_data[key] = value;
         return bot;
+    });
+
+    LBot.set_function("HasData", [this](Bot* bot, std::string const& key) {
+        return bot->m_data.valid() && bot->m_data[key] != sol::nil;
     });
 
     LBot.set_function("GetData", sol::overload(

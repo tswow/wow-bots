@@ -35,6 +35,7 @@ declare class WorldPacket extends PacketBase {
     Send(bot: Bot): void
     GetPayloadSize(): number
     ReadPackedGUID(): number;
+    WritePackedGUID(guid: number);
 }
 declare class AuthPacket extends PacketBase {}
 
@@ -46,6 +47,7 @@ declare class Bot {
     GetEvents(): BotEvents
     GetData<T>(key: string, def?: T): T
     SetData<T>(key: string, value: T): Bot
+    HasData(key: string): boolean
 }
 
 

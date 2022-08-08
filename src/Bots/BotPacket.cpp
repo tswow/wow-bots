@@ -257,6 +257,24 @@ uint64_t WorldPacket::ReadPackedGUID()
     return res;
 }
 
+void WorldPacket::WritePackedGUID(uint64_t guid)
+{
+    std::vector<uint8_t> guidOut(1);
+    guidOut[0] = 0;
+    guidOut.reserve(9);
+    for (size_t i = 0; guid != 0; ++i)
+    {
+        if ((guid & 0xff) != 0)
+        {
+            guidOut[0] |= 1 << i;
+            guidOut.push_back(guid & 0xff);
+        }
+        guid >>= 8;
+    }
+    WriteBytes(guidOut);
+}
+
+
 
 PACKET_WRITE_DEF(WorldPacket)
 PACKET_WRITE_DEF(AuthPacket)

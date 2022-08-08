@@ -29,9 +29,14 @@ namespace fs = std::filesystem;
 
 void BotMapDataMgr::Setup()
 {
-    fs::path dataDir = fs::path(sConfigMgr->GetStringDefault("DataDir", "./"));
+    fs::path dataDir = fs::path(sConfigMgr->GetStringDefault("Data.Path", "./"));
     fs::path mapsDir = dataDir / "maps";
     fs::path vmapsDir = dataDir / "vmaps";
+
+    if (!fs::exists(mapsDir))
+    {
+        BOT_LOG_WARN("Maps", "No 'maps' dir, heightmap data will not be loaded");
+    }
 
     thread_pool pool;
     if (fs::exists(mapsDir))
