@@ -15,98 +15,98 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "BotMapDataMgr.h"
-#include "Config.h"
 #include "BotLogging.h"
 
+#include "Config.h"
+#include "Map.h"
 #include "VMapFactory.h"
 #include "VMapManager2.h"
 
-#include "thread_pool.hpp"
 #include <filesystem>
-#include <mutex>
-
 namespace fs = std::filesystem;
 
 void BotMapDataMgr::Setup()
 {
-    fs::path dataDir = fs::path(sConfigMgr->GetStringDefault("Data.Path", "./"));
-    fs::path mapsDir = dataDir / "maps";
-    fs::path vmapsDir = dataDir / "vmaps";
 
-    if (!fs::exists(mapsDir))
-    {
-        BOT_LOG_WARN("Maps", "No 'maps' dir, heightmap data will not be loaded");
-    }
-
-    thread_pool pool;
-    if (fs::exists(mapsDir))
-    {
-        std::mutex map_mutex;
-        for (const fs::directory_entry& entry :
-            fs::directory_iterator(mapsDir))
-        {
-            if (!entry.is_regular_file() || entry.path().extension() != ".map")
-            {
-                continue;
-            }
-            //pool.push_task([=,&map_mutex]() {
-            std::string name = entry.path().filename().string();
-            uint32_t map = std::stoi(name.substr(0, 3));
-            uint32_t x = std::stoi(name.substr(3, 2));
-            uint32_t y = std::stoi(name.substr(5, 2));
-            //BOT_LOG_TRACE("maps", "Loading tile %i %i %i", map, x, y);
-            GridMap* gridMap;
-            {
-                std::scoped_lock lock(map_mutex);
-                gridMap = (m_maps[MapCoord{ map, x, y }] = std::make_unique<GridMap>()).get();
-            }
-            gridMap->loadData(entry.path().string().c_str());
-            //});
-        }
-    }
-    pool.wait_for_tasks();
-
-    VMAP::VMapManager2* mgr = VMAP::VMapFactory::createOrGetVMapManager();
-    if (fs::exists(vmapsDir))
-    {
-        for (const fs::directory_entry& entry : fs::directory_iterator(vmapsDir))
-        {
-            if (!entry.is_regular_file() || entry.path().extension() != ".vmtile")
-            {
-                continue;
-            }
-            
-            std::string name = entry.path().filename().string();
-            uint32_t map = std::stoi(name.substr(0, 3));
-            uint32_t x = std::stoi(name.substr(4, 2));
-            uint32_t y = std::stoi(name.substr(7, 2));
-            mgr->loadMap(vmapsDir.string().c_str(), map, x, y);
-        }
-    }
 }
 
-float BotMapDataMgr::GetVMapHeight(int map, float x, float y, float z, float maxSearchDist)
-{
-    return VMAP::VMapFactory::createOrGetVMapManager()->getHeight(map, x, y, z, maxSearchDist);
-}
-
-bool BotMapDataMgr::IsInLineOfSight(unsigned int mapId, float x1, float y1, float z1, float x2, float y2, float z2, VMAP::ModelIgnoreFlags ignoreFlags)
-{
-    return VMAP::VMapFactory::createOrGetVMapManager()->isInLineOfSight(mapId, x1, y1, z1, x2, y2, z2, ignoreFlags);
-}
-
-
-float BotMapDataMgr::GetHeight(int map, float x, float y)
+MapCoord BotMapDataMgr::GetMapCoord(uint32 map, float x, float y)
 {
     int gx = (int)(CENTER_GRID_ID - x / SIZE_OF_GRIDS);                       //grid x
     int gy = (int)(CENTER_GRID_ID - y / SIZE_OF_GRIDS);                       //grid y
-    MapCoord c = { map,gx,gy };
+    return MapCoord { uint32_t(map),gx,gy };
+}
+
+
+GridMap* BotMapDataMgr::LoadGridMap(uint32 map, float x, float y)
+{
+    MapCoord c = GetMapCoord(map, x, y);
     auto itr = m_maps.find(c);
     if (itr == m_maps.end())
     {
-        return 0;
+        int len = strlen("maps/%03u%02u%02u.map") + 1;
+        std::string tmp;
+        tmp.resize(len);
+        snprintf(tmp.data(), len, (char*)"maps/%03u%02u%02u.map", map, c.x, c.y);
+        fs::path mapPath = fs::path(sConfigMgr->GetStringDefault("Data.Path", "./")) / tmp;
+        if (fs::exists(mapPath))
+        {
+            GridMap* map = (m_maps[c] = std::make_unique<GridMap>()).get();
+            map->loadData(mapPath.string().c_str());
+            return map;
+        }
+        m_maps[c] = nullptr;
+        return nullptr;
     }
-    return itr->second->getHeight(x, y);
+    return itr->second.get();
+}
+
+bool BotMapDataMgr::LoadVMap(uint32 map, float x, float y)
+{
+    MapCoord c = GetMapCoord(map, x, y);
+    auto itr = m_vmaps.find(c);
+    if (itr != m_vmaps.end())
+    {
+        return itr->second;
+    }
+
+    fs::path vmapDir = fs::path(sConfigMgr->GetStringDefault("Data.Path", "./")) / "vmaps";
+    int vmapLoadResult = VMAP::VMapFactory::createOrGetVMapManager()->loadMap(vmapDir.string().c_str(), map, c.x,c.y);
+    switch (vmapLoadResult)
+    {
+    case VMAP::VMAP_LOAD_RESULT_OK:
+        BOT_LOG_DEBUG("maps", "VMAP loaded id:%d, x:%d, y:%d", map, c.x,c.y);
+        return (m_vmaps[c] = true);
+    case VMAP::VMAP_LOAD_RESULT_ERROR:
+        BOT_LOG_ERROR("maps", "Could not load VMAP, id:%d, x:%d, y:%d", map, c.x, c.y);
+        return (m_vmaps[c] = false);
+    case VMAP::VMAP_LOAD_RESULT_IGNORED:
+        BOT_LOG_DEBUG("maps", "Ignored VMAP, id:%d, x:%d, y:%d", map, c.x, c.y);
+        return (m_vmaps[c] = false);
+    default:
+        BOT_LOG_ERROR("maps", "Unknown VMapError %d: id:%d, x:%d, y:%d", vmapLoadResult, map, c.x,c.y);
+        return (m_vmaps[c] = false);
+    }
+}
+
+float BotMapDataMgr::GetHeight(uint32 map, float x, float y)
+{
+    GridMap* grid = LoadGridMap(map, x, y);
+    return grid ? grid->getHeight(x, y) : 0;
+}
+
+float BotMapDataMgr::GetVMapHeight(uint32 map, float x, float y, float z, float maxSearchDist)
+{
+    return LoadVMap(map,x,y)
+        ? VMAP::VMapFactory::createOrGetVMapManager()->getHeight(map,x,y,z,maxSearchDist)
+        : 0;
+}
+
+bool BotMapDataMgr::IsInLineOfSight(uint32 mapId, float x1, float y1, float z1, float x2, float y2, float z2, uint32_t ignoreFlags)
+{
+    return (LoadVMap(mapId, x1, y1) && LoadVMap(mapId, x2,y2))
+        ? VMAP::VMapFactory::createOrGetVMapManager()->isInLineOfSight(mapId, x1, y1, z1, x2, y2, z2, VMAP::ModelIgnoreFlags(ignoreFlags))
+        : 0;
 }
 
 BotMapDataMgr* BotMapDataMgr::instance()
@@ -114,4 +114,3 @@ BotMapDataMgr* BotMapDataMgr::instance()
     static BotMapDataMgr mgr;
     return &mgr;
 }
-

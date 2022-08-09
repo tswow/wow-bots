@@ -210,7 +210,7 @@ void BotLuaState::LoadBaseLibraries()
     });
 
     m_state.set_function("IsInLineOfSight", [](unsigned int mapId, float x1, float y1, float z1, float x2, float y2, float z2, uint32_t ignoreFlags) {
-        return sBotMapDataMgr->IsInLineOfSight(mapId, x1, y1, z2, x2, y2, z2, static_cast<VMAP::ModelIgnoreFlags>(ignoreFlags));
+        return sBotMapDataMgr->IsInLineOfSight(mapId, x1, y1, z2, x2, y2, z2, ignoreFlags);
     });
 
     m_state.set_function("ReadDir", 

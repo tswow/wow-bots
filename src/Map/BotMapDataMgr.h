@@ -16,17 +16,17 @@
  */
 #pragma once
 
-#include "BotMaps.h"
-#include "ModelIgnoreFlags.h"
+#include "PacketTypes.h"
 
 #include <map>
 #include <memory>
 
+class GridMap;
 struct MapCoord
 {
     uint32_t map;
-    uint32_t x;
-    uint32_t y;
+    int x;
+    int y;
     bool operator< (const MapCoord& rhs) const
     {
         if (rhs.map <= map) return false;
@@ -38,11 +38,16 @@ struct MapCoord
 class BotMapDataMgr
 {
     std::map<MapCoord, std::unique_ptr<GridMap>> m_maps;
+    std::map<MapCoord, bool> m_vmaps;
+private:
+    GridMap* LoadGridMap(uint32 map, float x, float y);
+    bool LoadVMap(uint32 map, float x, float y);
+    MapCoord GetMapCoord(uint32 map, float x, float y);
 public:
     void Setup();
-    float GetHeight(int map, float x, float y);
-    float GetVMapHeight(int map, float x, float y, float z, float maxSearchDist);
-    bool IsInLineOfSight(unsigned int mapId, float x1, float y1, float z1, float x2, float y2, float z2, VMAP::ModelIgnoreFlags ignoreFlags);
+    float GetHeight(uint32 map, float x, float y);
+    float GetVMapHeight(uint32 map, float x, float y, float z, float maxSearchDist);
+    bool IsInLineOfSight(uint32 map, float x1, float y1, float z1, float x2, float y2, float z2, uint32_t ignoreFlags);
     static BotMapDataMgr* instance();
 };
 

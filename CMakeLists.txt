@@ -69,7 +69,8 @@ foreach(source ${BOT_SOURCES_REL})
 endforeach()
 
 add_library(bots SHARED ${BOT_SOURCES} bots.conf)
-target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json BehaviorTree)
+target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json BehaviorTree game)
+target_include_directories(bots PUBLIC ../../tswow-core/Public ../client-extensions/CustomPackets)
 
 target_include_directories(bots PRIVATE 
   ${thread_pool_SOURCE_DIR}

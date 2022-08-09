@@ -7,7 +7,7 @@ declare function BOT_LOG_ERROR(category: string, fmt: string, ...values: any[]);
 declare function print(...values: any[])
 
 declare function GetHeight(map: number, x: number, y: number): number
-declare function GetVMapHeight(map: number, x: number, y: number): number
+declare function GetVMapHeight(map: number, x: number, y: number, z: number, searchDist: number): number
 declare function IsInLineOfSight(map: number, x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, ignoreFlags: number);
 
 declare function ReadDir(dir: string): string[]
