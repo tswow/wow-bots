@@ -17,6 +17,8 @@
 #include "BotPacket.h"
 #include "Bot.h"
 
+#include <promise.hpp>
+
 #define PACKET_WRITE_DEF(type)\
     type& type::WriteString(std::string const& str)\
     {\
@@ -131,20 +133,6 @@ void WorldPacket::Prepare(Bot& bot)
     }
 }
 
-boost::asio::awaitable<int64_t> WorldPacket::Send(Bot& bot)
-{
-    // need to do this so the m_data array is in scope
-    Prepare(bot);
-    co_return co_await bot.GetWorldSocket().WriteVector(m_data);
-}
-
-void WorldPacket::SendNoWait(Bot& bot)
-{
-    Prepare(bot);
-    bot.GetWorldSocket().WriteVectorNoWait(m_data);
-}
-
-
 WorldPacket::WorldPacket(std::vector<uint8_t> const& packet)
     : PacketBase{ packet }
 {
@@ -158,52 +146,6 @@ WorldPacket::WorldPacket(Opcodes opcode, size_t initialSize)
     memcpy(m_data.data() + 2, &opcode, sizeof(Opcodes));
     m_data.reserve(sizeof(Opcodes) + sizeof(uint16_t) + initialSize);
     m_read_ctr = 6;
-}
-
-boost::asio::awaitable<WorldPacket> WorldPacket::ReadWorldPacket(Bot& bot)
-{
-    BotSocket& socket = bot.GetWorldSocket();
-    // todo: read 6 bytes right away, we don't need to split it like this
-    uint8_t firstByte = co_await socket.Read<uint8_t>();
-    if (bot.m_decrypt.has_value())
-    {
-        bot.m_decrypt.value().UpdateData(&firstByte, sizeof(firstByte));
-    }
-
-    Opcodes command;
-    uint32_t size;
-    if (firstByte & 0x80)
-    {
-        std::array<uint8_t, 2> arr = co_await socket.ReadArray<2>();
-        if (bot.m_decrypt.has_value())
-        {
-            bot.m_decrypt.value().UpdateData(arr);
-        }
-        size = (uint32_t)((((firstByte) & 0x7F) << 16) | ((arr[0] << 8) | arr[1]));
-    }
-    else
-    {
-        firstByte &= 0x7f;
-        uint8_t size2 = co_await socket.Read<uint8_t>();
-        if (bot.m_decrypt.has_value())
-        {
-            bot.m_decrypt.value().UpdateData(&size2, sizeof(uint8_t));
-        }
-        size = (uint32_t)((firstByte) << 8 | size2);
-    }
-    
-    uint16_t cmdBytes = co_await socket.Read<uint16_t>();
-    if (bot.m_decrypt.has_value())
-    {
-        bot.m_decrypt.value().UpdateData(reinterpret_cast<uint8_t*>(&cmdBytes), sizeof(uint16_t));
-    }
-    command = static_cast<Opcodes>(cmdBytes);
-    size -= 2;
-    std::vector<uint8_t> data = co_await socket.ReadVector(size);
-    std::vector<uint8_t> dataFull(data.size() + 6);
-    memcpy(dataFull.data() + 2, &command, sizeof(Opcodes));
-    memcpy(dataFull.data() + 6, data.data(), data.size());
-    co_return WorldPacket(dataFull);
 }
 
 AuthPacket::AuthPacket(std::vector<uint8_t> const& packet)
@@ -231,14 +173,9 @@ AuthPacket::AuthPacket(size_t initialSize)
     Reserve(initialSize);
 }
 
-boost::asio::awaitable<uint64_t> AuthPacket::Send(Bot& bot)
+promise::Promise AuthPacket::Send(Bot& bot)
 {
-    return bot.GetAuthSocket().WriteVector(m_data);
-}
-
-void AuthPacket::SendNoWait(Bot& bot)
-{
-    bot.GetAuthSocket().WriteVectorNoWait(m_data);
+    return bot.GetAuthSocket2().WriteVector(m_data);
 }
 
 uint64_t WorldPacket::ReadPackedGUID()
@@ -274,7 +211,57 @@ void WorldPacket::WritePackedGUID(uint64_t guid)
     WriteBytes(guidOut);
 }
 
+promise::Promise WorldPacket::ReadWorldPacket(Bot* bot)
+{
+    return bot->GetWorldSocket2()
+        .ReadPOD<std::array<uint8_t,2>>()
+        .then([=](std::array<uint8_t,2> firstBytes){
+            if (bot->m_decrypt.has_value())
+            {
+                bot->m_decrypt->UpdateData(firstBytes.data(), 2);
+            }
+            if (firstBytes[0] & 0x80)
+            {
+                return bot->GetWorldSocket2()
+                    .ReadPOD<uint8_t>()
+                    .then([=](uint8_t extra){
+                        if (bot->m_decrypt.has_value())
+                        {
+                            bot->m_decrypt->UpdateData(&extra, 1);
+                        }
+                        return (uint32_t)((((firstBytes[0]) & 0x7F) << 16) | ((firstBytes[1] << 8) | extra));
+                    })
+                    ;
+            }
+            else
+            {
+                return promise::resolve(uint32_t((firstBytes[0] & 0x7f) << 8 | firstBytes[1]));
+            }
+        })
+        .then([=](uint32_t size) {
+            return bot->GetWorldSocket2()
+                .ReadVector(size)
+                .then([=](std::vector<uint8_t> vec){
+                    if (bot->m_decrypt.has_value())
+                    {
+                        bot->m_decrypt->UpdateData(vec.data(), 2);
+                    }
+                    std::vector<uint8_t> vecFull(vec.size() + 4);
+                    memcpy(vecFull.data() + 2, vec.data(), 2);
+                    memcpy(vecFull.data() + 6, vec.data() + 2, vec.size() - 2);
+                    return WorldPacket(vecFull);
+                })
+                ;
+        })
+        ;
+}
 
+promise::Promise WorldPacket::Send(Bot& bot)
+{
+    Prepare(bot);
+    return bot.GetWorldSocket2().WriteVector(m_data);
+}
 
 PACKET_WRITE_DEF(WorldPacket)
 PACKET_WRITE_DEF(AuthPacket)
+

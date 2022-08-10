@@ -35,6 +35,7 @@ class Bot;
 class BotProfileMgr;
 class MovementPacket;
 class UpdateDataPacket;
+struct RealmInfo;
 
 template <typename C, typename LC, typename DC>
 class Node;

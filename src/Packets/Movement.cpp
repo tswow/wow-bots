@@ -135,7 +135,7 @@ WorldPacket MovementPacket::Write()
 
 void MovementPacket::Send(Bot& bot)
 {
-    Write().SendNoWait(bot);
+    Write().Send(bot);
 }
 
 uint64 MovementPacket::GetGUID()

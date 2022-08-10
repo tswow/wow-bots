@@ -24,6 +24,8 @@
 #include "BehaviorTree.h"
 
 #include "boost/asio.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/bind/bind.hpp"
 
 #include <map>
 #include <thread>
@@ -34,89 +36,80 @@ static uint64_t now()
         (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
 
-boost::asio::awaitable<void> BotThread::run()
+void BotThread::run()
 {
-    BOT_LOG_DEBUG("BotThread", "Starting bot thread %i", m_threadId);
-    boost::asio::any_io_executor executor = co_await boost::asio::this_coro::executor;
+    m_timer.expires_from_now(boost::posix_time::millisec(50));
+    m_timer.async_wait(boost::bind(&BotThread::run, this));
 
-    // message loop
-    for (;;)
+    for (auto& [_, bot] : m_botsWithAI)
     {
-        boost::asio::deadline_timer t(executor, boost::posix_time::milliseconds(5));
-        co_await t.async_wait(boost::asio::use_awaitable);
+        if (bot->m_behavior)
         {
-            for (auto& [_, bot] : m_botsWithAI)
+            bot->m_behavior->Update(*bot, now());
+        }
+    }
+
+    if (m_queuedLogins.size() > 0 || m_queuedRemoves.size() > 0 || m_shouldReload)
+    {
+        std::scoped_lock lock(sBotMgr->m_botMutex);
+        for (std::string const& str : m_queuedLogins)
+        {
+            auto itr = sBotMgr->m_bots.find(str);
+            if (itr == sBotMgr->m_bots.end())
             {
-                if (bot->m_behavior)
+                continue;
+            }
+            Bot* bot = itr->second.get();
+            if (bot->m_thread != this || bot->m_disconnected)
+            {
+                continue;
+            }
+            bot->LoadScripts();
+            bot->Connect();
+        }
+        m_queuedLogins.clear();
+
+        for (std::string const& str : m_queuedRemoves)
+        {
+            auto itr = sBotMgr->m_bots.find(str);
+            if (itr == sBotMgr->m_bots.end())
+            {
+                continue;
+            }
+            Bot* bot = itr->second.get();
+            if (bot->m_thread != this || !bot->m_disconnected)
+            {
+                continue;
+            }
+            if (bot->m_behavior != nullptr)
+            {
+                m_botsWithAI.erase(str);
+            }
+            bot->DisconnectNow();
+            sBotMgr->m_bots.erase(str);
+        }
+
+        if (m_shouldReload)
+        {
+            for (auto& bot : sBotMgr->m_bots)
+            {
+                if (bot.second->m_thread == this)
                 {
-                    bot->m_behavior->Update(*bot, now());
+                    bot.second->UnloadScripts();
                 }
             }
-
-
-            if (m_queuedLogins.size() > 0 || m_queuedRemoves.size() > 0 || m_shouldReload)
+            m_botsWithAI.clear();
+            m_events->Reset();
+            m_lua = std::make_unique<BotProfileLua>(this);
+            m_lua->Start();
+            for (auto& bot : sBotMgr->m_bots)
             {
-                std::scoped_lock lock(sBotMgr->m_botMutex);
-                for (std::string const& str : m_queuedLogins)
+                if (bot.second->m_thread == this)
                 {
-                    auto itr = sBotMgr->m_bots.find(str);
-                    if (itr == sBotMgr->m_bots.end())
-                    {
-                        continue;
-                    }
-                    Bot* bot = itr->second.get();
-                    if (bot->m_thread != this || bot->m_disconnected)
-                    {
-                        continue;
-                    }
-                    bot->LoadScripts();
-                    boost::asio::co_spawn(executor, bot->Connect(executor, "127.0.0.1"), boost::asio::detached);
-                }
-                m_queuedLogins.clear();
-
-                for (std::string const& str : m_queuedRemoves)
-                {
-                    auto itr = sBotMgr->m_bots.find(str);
-                    if (itr == sBotMgr->m_bots.end())
-                    {
-                        continue;
-                    }
-                    Bot* bot = itr->second.get();
-                    if (bot->m_thread != this || !bot->m_disconnected)
-                    {
-                        continue;
-                    }
-                    if (bot->m_behavior != nullptr)
-                    {
-                        m_botsWithAI.erase(str);
-                    }
-                    bot->DisconnectNow();
-                    sBotMgr->m_bots.erase(str);
-                }
-
-                if (m_shouldReload)
-                {
-                    for (auto& bot : sBotMgr->m_bots)
-                    {
-                        if (bot.second->m_thread == this)
-                        {
-                            bot.second->UnloadScripts();
-                        }
-                    }
-                    m_botsWithAI.clear();
-                    m_events->Reset();
-                    m_lua = std::make_unique<BotProfileLua>(this);
-                    m_lua->Start();
-                    for (auto& bot : sBotMgr->m_bots)
-                    {
-                        if (bot.second->m_thread == this)
-                        {
-                            bot.second->LoadScripts();
-                        }
-                    }
-                    m_shouldReload = false;
+                    bot.second->LoadScripts();
                 }
             }
+            m_shouldReload = false;
         }
     }
 }
@@ -124,6 +117,8 @@ boost::asio::awaitable<void> BotThread::run()
 BotThread::BotThread()
     : m_events(std::make_unique<BotProfileMgr>())
     , m_threadId(UINT32_MAX)
+    , m_context()
+    , m_timer(m_context,boost::posix_time::millisec(50))
 {
 }
 
@@ -135,9 +130,9 @@ void BotThread::Reload()
 void BotThread::start(int thread)
 {
     m_threadId = thread;
-    boost::asio::io_context ctx;
-    boost::asio::co_spawn(ctx, run(), boost::asio::detached);
-    ctx.run();
+    BOT_LOG_DEBUG("BotThread", "Starting bot thread %i", m_threadId);
+    run();
+    m_context.run();
 }
 
 BotMgr* BotMgr::instance()

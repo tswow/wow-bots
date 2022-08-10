@@ -33,6 +33,27 @@ class Bot;
 template<typename C, typename LC, typename DC>
 class TreeExecutor;
 
+
+#pragma pack(push,1)
+struct RealmInfo
+{
+    uint8_t m_type;
+    uint8_t m_locked;
+    uint8_t m_flags;
+    std::string m_name;
+    std::string m_address;
+    uint16_t m_port;
+    float m_population;
+    uint8_t m_load;
+    uint8_t m_timezone;
+    uint8_t m_id;
+    uint8_t m_major_version;
+    uint8_t m_minor_version;
+    uint8_t m_bugfix_version;
+    uint8_t m_build;
+};
+#pragma pack(pop)
+
 class Bot
 {
 public:
@@ -40,13 +61,13 @@ public:
     void DisconnectNow();
     // Disconnects this bot the next time its owning thread 
     void QueueDisconnect();
-    boost::asio::awaitable<void> Connect(boost::asio::any_io_executor& exec, std::string const& authServerIp);
+    void Connect();
     void SetEncryptionKey(std::array<uint8_t,40> const& key);
     Bot(BotThread* thread, std::string const& username, std::string const& password, std::string const& events, std::string const& authserver);
     std::string const& GetUsername() const;
     std::string const& GetPassword() const;
-    BotSocket& GetWorldSocket();
-    BotSocket& GetAuthSocket();
+    BotSocket& GetAuthSocket2();
+    BotSocket& GetWorldSocket2();
     BotProfile GetEvents();
     friend class WorldPacket;
     friend class BotThread;
@@ -64,10 +85,15 @@ private:
     BotProfile m_cached_events;
     std::optional<Trinity::Crypto::ARC4> m_encrypt;
     std::optional<Trinity::Crypto::ARC4> m_decrypt;
-    std::optional<BotSocket> m_worldSocket;
+    std::array<uint8_t, 20> m_m2Hash;
+    std::array<uint8_t, 40> m_keyData;
     std::optional<BotSocket> m_authSocket;
+    std::optional<BotSocket> m_worldSocket;
+    RealmInfo m_realm;
+    boost::asio::io_context m_ioc;
     sol::table m_data;
-    boost::asio::awaitable<void> WorldPacketLoop();
     void LoadScripts();
     void UnloadScripts();
+    void Authenticate();
+    void ConnectionLoop();
 };

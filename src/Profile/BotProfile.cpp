@@ -77,7 +77,7 @@ void BotProfileMgr::ApplyParents(BotProfileData* target, BotProfileData* cur, st
 {
     for (BotProfileData* parent : cur->m_parents)
     {
-        if (!visited.contains(parent))
+        if (visited.find(parent) == visited.end())
         {
             visited.insert(parent);
             target->apply_extensions(parent);

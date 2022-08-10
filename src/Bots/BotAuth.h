@@ -95,24 +95,6 @@ enum class CommandDetail : uint8_t
     CHAR_NAME_DECLENSION_DOESNT_MATCH_BASE_NAME = 103
 };
 
-struct RealmInfo
-{
-    uint8_t m_type;
-    uint8_t m_locked;
-    uint8_t m_flags;
-    std::string m_name;
-    std::string m_address;
-    uint16_t m_port;
-    float m_population;
-    uint8_t m_load;
-    uint8_t m_timezone;
-    uint8_t m_id;
-    uint8_t m_major_version;
-    uint8_t m_minor_version;
-    uint8_t m_bugfix_version;
-    uint8_t m_build;
-};
-
 struct ServerAuthChallenge
 {
     std::array<uint8_t, 32> m_B;
@@ -134,11 +116,3 @@ struct WorldAuthResponse
     uint8_t expansion;
 };
 #pragma pack(pop)
-
-class AuthMgr
-{
-public:
-    boost::asio::awaitable<void> AuthenticateBot(boost::asio::any_io_executor& exec, std::string const& authServerIp, Bot& bot);
-    static AuthMgr* instance();
-};
-#define sAuthMgr AuthMgr::instance()

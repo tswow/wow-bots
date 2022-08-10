@@ -683,7 +683,7 @@ public:
             // todo: predict size
             stream << "    WorldPacket packet(Opcodes(" << std::to_string(int(m_opcode.value())) << "));\n";
             stream << "    Write(packet);\n";
-            stream << "    packet.SendNoWait(bot);\n";
+            stream << "    packet.Send(bot);\n";
             stream << "}\n";
 
         }

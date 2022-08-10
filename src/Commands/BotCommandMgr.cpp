@@ -241,7 +241,7 @@ void BotCommandMgr::Fire(std::string const& input)
     BotCommand* cur_command = nullptr;
     for (auto & [name,value] : m_commands)
     {
-        if (input.starts_with(name) && (!cur_command || name.size() > cur_command->m_name.size()))
+        if (input.rfind(name,0) == 0 && (!cur_command || name.size() > cur_command->m_name.size()))
         {
             cur_command = value.get();
         }

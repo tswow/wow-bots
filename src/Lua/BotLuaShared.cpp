@@ -161,7 +161,12 @@ void BotLuaState::Start()
         m_modules["lualib_bundle"] = m_state.create_table();
     }
 
-    for (auto const& file : std::filesystem::recursive_directory_iterator(m_rootPath))
+    if (!fs::exists(m_rootPath))
+    {
+        return;
+    }
+
+    for (auto const& file : fs::recursive_directory_iterator(m_rootPath))
     {
         if (file.is_regular_file() && file.path().extension() == ".lua")
         {

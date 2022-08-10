@@ -20,7 +20,8 @@
 #include "BotConfig.h"
 #include "BotMain.h"
 
-#include <boost/asio/awaitable.hpp>
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <string>
 #include <vector>
@@ -43,15 +44,17 @@ public:
     BotThread();
     std::unique_ptr<BotProfileMgr> m_events = nullptr;
     std::unique_ptr<BotProfileLua> m_lua = nullptr;
+    boost::asio::io_context m_context;
     ~BotThread();
 private:
-    boost::asio::awaitable<void> run();
+    void run();
     uint32_t m_threadId;
     std::vector<std::string> m_queuedLogins;
     std::vector<std::string> m_queuedRemoves;
     std::map<std::string, Bot*> m_botsWithAI;
     int m_bot_count = 0;
     std::atomic<bool> m_shouldReload = true;
+    boost::asio::deadline_timer m_timer;
     friend class Bot;
     friend class BotMgr;
 };

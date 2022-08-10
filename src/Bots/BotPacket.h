@@ -24,6 +24,7 @@
 #include <string>
 
 class Bot;
+namespace promise { class Promise; }
 
 class PacketBase
 {
@@ -100,9 +101,8 @@ public:
     void Reserve(uint32_t amount);
     void Reset();
     void Seek(uint32_t offset);
-    boost::asio::awaitable<int64_t> Send(Bot& bot);
-    void SendNoWait(Bot& bot);
-    static boost::asio::awaitable<WorldPacket> ReadWorldPacket(Bot& bot);
+    promise::Promise Send(Bot& bot);
+    static promise::Promise ReadWorldPacket(Bot* bot);
     PACKET_WRITE_DECL(WorldPacket)
 private:
     void Prepare(Bot& bot);
@@ -116,7 +116,6 @@ public:
     void Reserve(uint32_t amount);
     void Reset();
     void Seek(uint32_t offset);
-    boost::asio::awaitable<uint64_t> Send(Bot& bot);
-    void SendNoWait(Bot& bot);
+    promise::Promise Send(Bot& bot);
     PACKET_WRITE_DECL(AuthPacket)
 };
