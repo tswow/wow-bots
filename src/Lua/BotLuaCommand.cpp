@@ -39,7 +39,7 @@ void BotLuaCommand::LoadLibraries()
     m_state.set_function("GetBotAccount", GetBotAccount);
     m_state.set_function("GetBotAccounts", [](sol::table table) {
         std::vector<uint32_t> vec;
-        vec.resize(table.size());
+        vec.reserve(table.size());
         for (auto& [key,value] : table)
         {
             vec.push_back(value.as<uint32_t>());
