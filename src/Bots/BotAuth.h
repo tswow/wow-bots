@@ -134,11 +134,3 @@ struct WorldAuthResponse
     uint8_t expansion;
 };
 #pragma pack(pop)
-
-class AuthMgr
-{
-public:
-    boost::asio::awaitable<void> AuthenticateBot(boost::asio::any_io_executor& exec, std::string const& authServerIp, Bot& bot);
-    static AuthMgr* instance();
-};
-#define sAuthMgr AuthMgr::instance()

@@ -95,6 +95,12 @@ BotSocket& Bot::GetAuthSocket()
     return m_authSocket.value();
 }
 
+BotSocket2& Bot::GetAuthSocket2()
+{
+    return m_authSocket2.value();
+}
+
+
 BotProfile Bot::GetEvents()
 {
     return m_cached_events;
@@ -110,40 +116,15 @@ void Bot::SetEncryptionKey(std::array<uint8_t, 40> const& key)
     m_decrypt.value().Init(Trinity::Crypto::HMAC_SHA1::GetDigestOf(ClientDecryptionKey, key));
     std::array<uint8_t, 1024> arr;
     m_encrypt.value().UpdateData(arr);
-
     m_decrypt.value().UpdateData(arr);
 }
 
-boost::asio::awaitable<void> Bot::WorldPacketLoop()
-{
-    for (;;)
-    {
-        try
-        {
-            WorldPacket curPacket = co_await WorldPacket::ReadWorldPacket(*this);
-            try
-            {
-                FIRE_ID(uint32_t(curPacket.GetOpcode()), OnWorldPacket, GetEvents(), { curPacket.Reset(); }, * this, curPacket)
-            }
-            catch (std::exception const& e)
-            {
-                // TODO: better reporting
-                BOT_LOG_ERROR("bot", e.what());
-            }
-        }
-        catch (std::exception const&)
-        {
-            // TODO: filter by exception type
-            break;
-        }
-    }
-}
-
-boost::asio::awaitable<void> Bot::Connect(boost::asio::any_io_executor& exec, std::string const& authServerIp)
+void Bot::Connect()
 {
     DisconnectNow();
-
     BOT_LOG_DEBUG("bot","Logging in %s", GetUsername().c_str());
+    Authenticate();
+    /*
     try
     {
         co_await sAuthMgr->AuthenticateBot(exec, authServerIp, *this);
@@ -155,7 +136,9 @@ boost::asio::awaitable<void> Bot::Connect(boost::asio::any_io_executor& exec, st
     }
 
     BOT_LOG_DEBUG("bot","Successfully logged in as %s", GetUsername().c_str());
+    co_return;
     co_await WorldPacketLoop();
+    */
 }
 
 void Bot::UnloadScripts()

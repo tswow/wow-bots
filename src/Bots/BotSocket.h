@@ -19,10 +19,65 @@
 #include "ARC4.h"
 
 #include <boost/asio.hpp>
+#include <promise.hpp>
 
 #include <string>
 #include <vector>
 #include <optional>
+#include <iostream>
+
+class BotSocket2
+{
+public:
+    boost::asio::ip::tcp::socket m_socket;
+    boost::asio::ip::tcp::resolver m_resolver;
+    BotSocket2(boost::asio::io_context& ctx);
+    promise::Promise Connect(std::string const& ip, std::string const& port);
+    promise::Promise WriteVector(std::vector<uint8_t> const& value);
+    promise::Promise ReadCString();
+    promise::Promise ReadString(uint32_t size);
+    template <typename T>
+    promise::Promise WritePOD(T& value)
+    {
+        unsigned char* chr = new unsigned char[sizeof(T)];
+        memcpy(chr, &value, sizeof(T));
+        return promise::newPromise([this, chr, value](promise::Defer& defer) {
+            boost::asio::async_write(m_socket, boost::asio::buffer(chr, sizeof(T)), [chr,defer](const boost::system::error_code& ec, size_t amount) {
+                delete[] chr;
+                if (ec.failed())
+                {
+                    defer.reject(ec);
+                }
+                else
+                {
+                    defer.resolve();
+                }
+            });
+        });
+    }
+
+    template <typename T>
+    promise::Promise ReadPOD()
+    {
+        return promise::newPromise([this](promise::Defer& defer) {
+            T* value = new T();
+            boost::asio::async_read(m_socket, boost::asio::buffer(value, sizeof(T)), [defer, value](const boost::system::error_code& ec, std::size_t len)
+            {
+                if (ec.failed())
+                {
+                    delete value;
+                    return defer.reject(ec);
+                }
+                else
+                {
+                    T v = *value;
+                    delete value;
+                    return defer.resolve(v);
+                }
+            });
+        });
+    }
+};
 
 class BotSocket
 {

@@ -17,6 +17,8 @@
 #include "BotPacket.h"
 #include "Bot.h"
 
+#include <promise.hpp>
+
 #define PACKET_WRITE_DEF(type)\
     type& type::WriteString(std::string const& str)\
     {\
@@ -236,6 +238,12 @@ boost::asio::awaitable<uint64_t> AuthPacket::Send(Bot& bot)
     return bot.GetAuthSocket().WriteVector(m_data);
 }
 
+promise::Promise AuthPacket::Send2(Bot& bot)
+{
+    return bot.GetAuthSocket2().WriteVector(m_data);
+}
+
+
 void AuthPacket::SendNoWait(Bot& bot)
 {
     bot.GetAuthSocket().WriteVectorNoWait(m_data);
@@ -274,7 +282,10 @@ void WorldPacket::WritePackedGUID(uint64_t guid)
     WriteBytes(guidOut);
 }
 
-
+promise::Promise WorldPacket::ReadWorldPacket2(Bot& bot)
+{
+    BotSocket& socket = bot.GetWorldSocket();
+}
 
 PACKET_WRITE_DEF(WorldPacket)
 PACKET_WRITE_DEF(AuthPacket)

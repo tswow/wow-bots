@@ -150,7 +150,7 @@ void BotProfileLua::LoadLibraries()
     });
 
     LBot.set_function("HasData", [this](Bot* bot, std::string const& key) {
-        return bot->m_data.valid() && bot->m_data[key] != sol::nil;
+        return bot->m_data.valid() ? bot->m_data[key] != sol::nil : false;
     });
 
     LBot.set_function("GetData", sol::overload(

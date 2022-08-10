@@ -15,8 +15,103 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "BotSocket.h"
+#include <promise.hpp>
 
 using boost::asio::ip::tcp;
+
+BotSocket2::BotSocket2(boost::asio::io_context& ctx)
+    : m_socket(ctx)
+    , m_resolver(ctx)
+{
+}
+
+promise::Promise BotSocket2::Connect(std::string const& address, std::string const& port)
+{
+    return promise::newPromise([this, address, port](promise::Defer& defer) {
+        m_resolver.async_resolve(address, port, [this, defer](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::results_type results) {
+            if (ec.failed())
+            {
+                defer.reject();
+            }
+            else
+            {
+                boost::asio::async_connect(m_socket, results, [defer](const boost::system::error_code& ec, auto _) {
+                    if (ec.failed())
+                    {
+                        return defer.reject();
+                    }
+                    else
+                    {
+                        return defer.resolve();
+                    }
+                    });
+            }
+        });
+    });
+}
+
+promise::Promise BotSocket2::WriteVector(std::vector<uint8_t> const& value)
+{
+    uint8_t* arr = new uint8_t[value.size()];
+    memcpy(arr, value.data(), value.size());
+    size_t size = value.size();
+    return promise::newPromise([=](promise::Defer& defer) {
+        boost::asio::async_write(m_socket, boost::asio::buffer(arr,size), [=](const boost::system::error_code& ec, auto _) {
+            delete[] arr;
+            if (ec.failed())
+            {
+                defer.reject(ec);
+            }
+            else
+            {
+                defer.resolve();
+            }
+        });
+    });
+}
+
+promise::Promise BotSocket2::ReadCString()
+{
+    std::string* str = new std::string("");
+    return promise::doWhile([=](promise::DeferLoop& loop) {
+        ReadPOD<uint8_t>().then([=](uint8_t value) {
+            if (value == 0)
+            {
+                std::string s = *str;
+                delete str;
+                return loop.doBreak(s);
+            }
+            else
+            {
+                return loop.doContinue();
+            }
+        })
+        .fail([=](){
+            delete str;
+            loop.reject();
+        });
+    });
+}
+
+promise::Promise BotSocket2::ReadString(uint32_t size)
+{
+    char* arr = new char[size];
+    return promise::newPromise([=](promise::Defer& defer) {
+        boost::asio::async_read(m_socket, boost::asio::buffer(arr, size), [=](const boost::system::error_code& ec, auto _) {
+            std::string str(arr, size);
+            delete[] arr;
+            if (ec.failed())
+            {
+                defer.reject(ec);
+            }
+            else
+            {
+                defer.resolve(str);
+            }
+            });
+        });
+}
+
 
 BotSocket::BotSocket(boost::asio::any_io_executor& ctx, std::string const& ip, std::string const& port)
     : m_worldSocket(ctx)

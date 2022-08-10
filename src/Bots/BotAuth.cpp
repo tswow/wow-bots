@@ -24,6 +24,8 @@
 #include "BigNumber.h"
 #include "CryptoHash.h"
 #include "CryptoRandom.h"
+#include "promise.hpp"
+#include "io.hpp"
 
 #include <iterator>
 #include <algorithm>
@@ -154,6 +156,7 @@ struct ServerRealmlistHeader
 };
 #pragma pack(pop)
 
+
 static void AssertAuthCommand(AuthCommand expected, AuthCommand com, AuthResult res)
 {
     if (res != AuthResult::SUCCESS)
@@ -167,6 +170,40 @@ static void AssertAuthCommand(AuthCommand expected, AuthCommand com, AuthResult 
         std::string coms = std::string(AuthCommandString(com));
         throw std::runtime_error("Invalid auth command: Expected " + exprs + " but got " + coms + "(" + std::to_string(uint32_t(com)) + ")");
     }
+}
+
+static auto AssertAuthCommand(AuthCommand expected, BotSocket2* socket)
+{
+    return socket->ReadPOD<AuthCommand>()
+        .then([=](AuthCommand command) {
+            if (command != expected)
+            {
+                BOT_LOG_ERROR("Auth", "Invalid auth command, expected %s but got %s", AuthCommandString(expected).c_str(), AuthCommandString(command).c_str());
+                return promise::reject();
+            }
+
+            if (command == AuthCommand::LOGON_CHALLENGE)
+            {
+                return socket
+                    ->ReadPOD<uint8_t>()
+                    .then([=]() { return socket->ReadPOD<AuthResult>(); });
+                ;
+            }
+            else
+            {
+                return socket->ReadPOD<AuthResult>();
+            }
+        })
+        .then([=](AuthResult result) {
+            if (result != AuthResult::SUCCESS)
+            {
+                return promise::reject();
+            }
+            else
+            {
+                return promise::resolve();
+            }
+        });
 }
 
 static boost::asio::awaitable<void> AssertAuthCommand(AuthCommand expected, BotSocket& socket)
@@ -280,9 +317,184 @@ std::array<uint8_t, T> getRandomBytes()
     return arr;
 }
 
+static promise::Promise ReadRealmInfo(BotSocket2* socket)
+{
+    RealmInfo* realm = new RealmInfo();
+    return socket->ReadPOD<uint8_t>()
+        .then([=](uint8_t type) { realm->m_type = type; return socket->ReadPOD<uint8_t>(); })
+        .then([=](uint8_t locked) { realm->m_locked = locked; return socket->ReadPOD<uint8_t>(); })
+        .then([=](uint8_t flags) { realm->m_flags = flags; return socket->ReadCString(); })
+        .then([=](std::string const& name) { realm->m_name = name; return socket->ReadCString(); })
+        .then([=](std::string const& tokens) {
+            size_t off = tokens.find(':');
+            if (off == std::string::npos)
+            {
+                realm->m_port = 8085;
+                realm->m_address = tokens;
+            }
+            else
+            {
+                realm->m_address = tokens.substr(0, off);
+                realm->m_port = std::stoi(tokens.substr(off + 1));
+            }
+            return socket->ReadPOD<float>();
+        })
+        .then([=](float population) { realm->m_population = population; return socket->ReadPOD<uint8_t>(); })
+        .then([=](uint8_t load) { realm->m_load = load; return socket->ReadPOD<uint8_t>(); })
+        .then([=](uint8_t timezone) { realm->m_timezone = timezone; return socket->ReadPOD<uint8_t>(); })
+        .then([=](uint8_t id) {
+            realm->m_id = id;
+            if (realm->m_flags & 4)
+            {
+                return socket->ReadPOD<uint8_t>()
+                    .then([=](uint8_t major) { realm->m_major_version = major; return socket->ReadPOD<uint8_t>(); })
+                    .then([=](uint8_t minor) { realm->m_minor_version = minor; return socket->ReadPOD<uint8_t>(); })
+                    .then([=](uint8_t bugfix) { realm->m_bugfix_version = bugfix; return socket->ReadPOD<uint8_t>(); })
+                    .then([=](uint8_t build) {
+                        realm->m_build = build;
+                        RealmInfo realmVal = *realm;
+                        delete realm;
+                        return promise::resolve(realmVal);
+                    });
+            }
+            else
+            {
+                RealmInfo realmVal = *realm;
+                delete realm;
+                return promise::resolve(realmVal);
+            }
+        })
+        .fail([=]() {
+            delete realm;
+        })
+    ;
+}
+
+void Bot::Authenticate()
+{
+    std::cout << "Authenticating to " << m_authserverIp << "\n";
+    m_authSocket2.emplace(BotSocket2(m_thread->m_context));
+    m_authSocket2->Connect(m_authserverIp,"3724")
+    .then([this]() {
+        AuthPacket pkt(MergeVec(ClientAuthChallenge(GetUsername(), m_authSocket2->m_socket.local_endpoint().address().to_v4().to_uint()), GetUsername()));
+        return pkt.Send2(*this);
+    })
+    .then([this]() { return AssertAuthCommand(AuthCommand::LOGON_CHALLENGE, &m_authSocket2.value()); })
+    .then([this]() { return m_authSocket2->ReadPOD<ServerAuthChallenge>(); })
+    .then([this](ServerAuthChallenge serverChallenge) {
+        std::string authString = GetUsername() + ":" + GetPassword();
+        std::transform(authString.begin(), authString.end(), authString.begin(), [](uint8_t c) {return std::toupper(c); });
+        // this is just a bunch of math
+        BigNumber k(3);
+        BigNumber B = CreateBigNumber<32>(serverChallenge.m_B);
+        BigNumber g(serverChallenge.m_g);
+        BigNumber N = CreateBigNumber<32>(serverChallenge.m_N);
+        BigNumber salt = CreateBigNumber<32>(serverChallenge.m_salt);
+        BigNumber unk1 = CreateBigNumber<16>(serverChallenge.m_unk3);
+        BigNumber x = CreateBigNumber(SHA1(serverChallenge.m_salt, SHA1(authString)));
+        BigNumber A;
+        BigNumber a;
+        do
+        {
+            a = BigNumber(getRandomBytes<19>());
+            A = g.ModExp(a, N);
+        } while (A.ModExp(1, N) == 0);
+        BigNumber u = CreateBigNumber(SHA1(A, B));
+        BigNumber S = ((B + k * (N - g.ModExp(x, N))) % N).ModExp(a + (u * x), N);
+        std::vector<uint8_t> sData = MergeVec(S);
+        if (sData.size() < 32)
+            sData.resize(32);
+        std::array<uint8_t, 40> keyData;
+        std::array<uint8_t, 16> temp;
+        for (int i = 0; i < 16; ++i)
+            temp[i] = sData[i * 2];
+        std::array<uint8_t, 20> keyHash = SHA1(temp);
+        for (int i = 0; i < 20; ++i)
+            keyData[int64_t(i) * 2] = keyHash[i];
+        for (int i = 0; i < 16; ++i)
+            temp[i] = sData[int64_t(i) * 2 + 1];
+        keyHash = SHA1(temp);
+        for (int i = 0; i < 20; ++i)
+            keyData[int64_t(i) * 2 + 1] = keyHash[i];
+        BigNumber key(keyData);
+        std::vector<uint8_t> gnHash(20);
+        auto nHash = SHA1(N);
+        for (int i = 0; i < 20; ++i)
+            gnHash[i] = nHash[i];
+        auto gHash = SHA1(g);
+        for (int i = 0; i < 20; ++i)
+            gnHash[i] ^= gHash[i];
+        auto m1Hash = SHA1(gnHash, SHA1(GetUsername()), serverChallenge.m_salt, A, B, key);
+        m_m2Hash = SHA1(A, m1Hash, keyData);
+        auto packet = AuthPacket(MergeVec(uint8_t(AuthCommand::LOGON_PROOF), A, m1Hash, std::vector<uint8_t>(22)));
+        bool cancelLogonProof = false;
+        FIRE(OnAuthProof, GetEvents(), {}, *this, serverChallenge, packet, BotMutable<bool>(&cancelLogonProof));
+        if (cancelLogonProof)
+        {
+            return promise::reject();
+        }
+        return packet.Send2(*this);
+    })
+    .then([this]() { return AssertAuthCommand(AuthCommand::LOGON_PROOF, &m_authSocket2.value()); })
+    .then([this]() { return m_authSocket2->ReadPOD<ServerAuthProof>(); })
+    .then([this](ServerAuthProof& serverProof) {
+        if (serverProof.M2 != m_m2Hash)
+        {
+            BOT_LOG_ERROR("Auth", "Server proof mismatch");
+            return promise::reject();
+        }
+        AuthPacket realmlistRequest(MergeVec(ClientRequestRealmlist({})));
+        return realmlistRequest.Send2(*this);
+    })
+    .then([this]() { return m_authSocket2->ReadPOD<ServerRealmlistHeader>(); })
+    .then([this](ServerRealmlistHeader header) {
+        std::vector<RealmInfo>* realms = new std::vector<RealmInfo>();
+        realms->reserve(header.size);
+        uint16_t* count = new uint16_t(header.size);
+        return promise::doWhile([=](promise::DeferLoop& loop) {
+            if (*count == 0)
+            {
+                std::vector<RealmInfo> realmsCpy;
+                realmsCpy.insert(realmsCpy.end(), realms->begin(), realms->end());
+                delete realms;
+                delete count;
+                return loop.doBreak(realmsCpy);
+            }
+            ReadRealmInfo(&m_authSocket2.value())
+                .then([=](RealmInfo info){
+                    realms->push_back(info);
+                    (*count)--;
+                    loop.doContinue();
+                })
+                .fail([=](){
+                    delete realms;
+                    delete count;
+                });
+        });
+    })
+    .then([this](std::vector<RealmInfo> realms) {
+        RealmInfo selectedRealm = realms[0];
+        FIRE(OnSelectRealm, GetEvents(), {}, *this, realms, BotMutable<RealmInfo>(&selectedRealm));
+        m_worldSocket2.emplace(BotSocket2(m_thread->m_context));
+        return m_worldSocket2->Connect(selectedRealm.m_address, std::to_string(selectedRealm.m_port));
+    })
+    .then([this]() {
+
+    })
+    .fail([this](){
+        std::cout << "Failure\n";
+    })
+    .finally([](){
+        std::cout << "Success\n";
+    })
+    ;
+}
+
+/*
 // This function can serve as a general document for how to connect to an authserver -> worldserver on 3.3.5
 boost::asio::awaitable<void> AuthMgr::AuthenticateBot(boost::asio::any_io_executor & exec, std::string const& authServerIp, Bot& bot)
 {
+    co_return;
     // Step 1: Establish tcp connection with authserver
     BotSocket& authSocket = bot.m_authSocket.emplace(BotSocket(exec, authServerIp, "3724"));
     co_await authSocket.Connect(exec);
@@ -486,3 +698,4 @@ AuthMgr* AuthMgr::instance()
     static AuthMgr mgr;
     return &mgr;
 }
+*/

@@ -40,13 +40,15 @@ public:
     void DisconnectNow();
     // Disconnects this bot the next time its owning thread 
     void QueueDisconnect();
-    boost::asio::awaitable<void> Connect(boost::asio::any_io_executor& exec, std::string const& authServerIp);
+    void Connect();
     void SetEncryptionKey(std::array<uint8_t,40> const& key);
     Bot(BotThread* thread, std::string const& username, std::string const& password, std::string const& events, std::string const& authserver);
     std::string const& GetUsername() const;
     std::string const& GetPassword() const;
     BotSocket& GetWorldSocket();
     BotSocket& GetAuthSocket();
+    BotSocket2& GetAuthSocket2();
+    BotSocket2& GetWorldSocket2();
     BotProfile GetEvents();
     friend class WorldPacket;
     friend class BotThread;
@@ -66,8 +68,13 @@ private:
     std::optional<Trinity::Crypto::ARC4> m_decrypt;
     std::optional<BotSocket> m_worldSocket;
     std::optional<BotSocket> m_authSocket;
+    std::array<uint8_t, 20> m_m2Hash;
+    std::optional<BotSocket2> m_authSocket2;
+    std::optional<BotSocket2> m_worldSocket2;
+
+    boost::asio::io_context m_ioc;
     sol::table m_data;
-    boost::asio::awaitable<void> WorldPacketLoop();
     void LoadScripts();
     void UnloadScripts();
+    void Authenticate();
 };

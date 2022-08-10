@@ -18,6 +18,16 @@ if(NOT json_POPULATED)
   FetchContent_MakeAvailable(json)
 endif()
 
+if(NOT promise_POPULATED)
+  FetchContent_Declare(
+    promise
+    GIT_REPOSITORY https://github.com/xhawk18/promise-cpp.git
+    GIT_TAG 2.1.5
+  )
+  FetchContent_MakeAvailable(promise)
+  target_compile_definitions(promise PUBLIC PROMISE_MULTITHREAD=0)
+endif()
+
 # use trinitycore dep (tswow repo)
 if(EXISTS ${CMAKE_SOURCE_DIR}/dep/cxxopts)
   set(cxxopts_include ${CMAKE_SOURCE_DIR}/dep/cxxopts)
@@ -69,13 +79,15 @@ foreach(source ${BOT_SOURCES_REL})
 endforeach()
 
 add_library(bots SHARED ${BOT_SOURCES} bots.conf)
-target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json BehaviorTree game)
+target_link_libraries(bots shared trinity-core-interface liblua Detour g3dlib nlohmann_json::nlohmann_json BehaviorTree game promise)
 target_include_directories(bots PUBLIC ../../tswow-core/Public ../client-extensions/CustomPackets)
 
 target_include_directories(bots PRIVATE 
   ${thread_pool_SOURCE_DIR}
   ${cxxopts_include}
   ${sol2_SOURCE_DIR}/include
+  ${promise_SOURCE_DIR}/include/promise-cpp
+  ${promise_SOURCE_DIR}/add_ons/asio
   ${LUA_ROOT}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/Map
