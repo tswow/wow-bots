@@ -1,7 +1,7 @@
 declare class BotCommandArguments {
-    GetNumber(index: number): number
-    GetString(index: number): string
-    GetBool(index: number): boolean
+    GetNumber(name: string): number
+    GetString(name: string): string
+    GetBool(name: string): boolean
 }
 declare class BotCommandBuilder {
     AddStringParam(name: string, def?: string): BotCommandBuilder
