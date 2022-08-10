@@ -20,15 +20,19 @@ endif()
 
 # use trinitycore dep (tswow repo)
 if(EXISTS ${CMAKE_SOURCE_DIR}/dep/cxxopts)
+  message("Using Trinity cxxopts")
   set(cxxopts_include ${CMAKE_SOURCE_DIR}/dep/cxxopts)
 # clone it ourselves
-elseif(NOT cxxopts_POPULATED)
-  FetchContent_Declare(
-    cxxopts
-    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-    GIT_TAG v3.0.0
-  )
-  FetchContent_MakeAvailable(cxxopts)
+else()
+  message("Installing cxxopts")
+  if(NOT ${cxxopts_POPULATED})
+    FetchContent_Declare(
+      cxxopts
+      GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+      GIT_TAG v3.0.0
+    )
+    FetchContent_MakeAvailable(cxxopts)
+  endif()
   set(cxxopts_include ${cxxopts_SOURCE_DIR}/include)
 endif()
 
