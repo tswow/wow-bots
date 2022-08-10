@@ -48,6 +48,7 @@ declare class Bot {
     GetData<T>(key: string, def?: T): T
     SetData<T>(key: string, value: T): Bot
     HasData(key: string): boolean
+    IsLoggedIn(): boolean
 }
 
 

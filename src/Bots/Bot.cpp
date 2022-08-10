@@ -62,6 +62,7 @@ void Bot::QueueDisconnect()
 
 void Bot::DisconnectNow()
 {
+    m_isLoggedIn = false;
     if (m_worldSocket.has_value() || m_authSocket.has_value())
     {
         BOT_LOG_DEBUG("bot","Logging out %s",m_username.c_str());
@@ -154,5 +155,10 @@ void Bot::ConnectionLoop()
             .fail([=]() { loop.doBreak(); })
             ;
     });
+}
+
+bool Bot::IsLoggedIn()
+{
+    return m_isLoggedIn;
 }
 

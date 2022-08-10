@@ -495,6 +495,7 @@ void Bot::Authenticate()
             //throw std::runtime_error(std::string("World authentication failed: ") + std::to_string(uint32_t(resp.m_detail)));
         }
         ConnectionLoop();
+        m_isLoggedIn = true;
         return promise::resolve();
     })
     .fail([this](){})

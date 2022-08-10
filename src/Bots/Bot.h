@@ -63,6 +63,7 @@ public:
     void QueueDisconnect();
     void Connect();
     void SetEncryptionKey(std::array<uint8_t,40> const& key);
+    bool IsLoggedIn();
     Bot(BotThread* thread, std::string const& username, std::string const& password, std::string const& events, std::string const& authserver);
     std::string const& GetUsername() const;
     std::string const& GetPassword() const;
@@ -80,6 +81,7 @@ private:
     std::string m_password;
     std::string m_authserverIp;
     bool m_disconnected;
+    bool m_isLoggedIn = false;
     std::unique_ptr<TreeExecutor<Bot,std::monostate,std::monostate>> m_behavior;
     std::string m_events;
     BotProfile m_cached_events;
