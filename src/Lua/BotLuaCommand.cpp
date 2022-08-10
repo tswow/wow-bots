@@ -80,19 +80,6 @@ void BotLuaCommand::LoadLibraries()
     LBotCommandArguments.set_function("GetString", &BotCommandArguments::get_string);
     LBotCommandArguments.set_function("GetBool", &BotCommandArguments::get_bool);
 
-    fs::path path = fs::path(sConfigMgr->GetStringDefault("Lua.Path","./")) / "commands";
-    if (std::filesystem::exists(path))
-    {
-        for (const std::filesystem::directory_entry& dir_entry :
-            std::filesystem::recursive_directory_iterator(path))
-        {
-            if (std::filesystem::is_regular_file(dir_entry.path()) && dir_entry.path().extension() == ".lua")
-            {
-                m_state.safe_script_file(dir_entry.path().string());
-            }
-        }
-    }
-
     m_state.set_function("StartBot", sol::overload(
         [](std::string const& username, std::string const& password, std::string const& events, std::string const& authserver) {
             StartBot(username, password, events, authserver);
