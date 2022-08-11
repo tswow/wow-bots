@@ -143,6 +143,7 @@ void BotProfileLua::LoadLibraries()
     LBot.set_function("GetUsername", &Bot::GetUsername);
     LBot.set_function("GetPassword", &Bot::GetPassword);
     LBot.set_function("IsLoggedIn", &Bot::IsLoggedIn);
+    LBot.set_function("GetThreadID", &Bot::GetThreadID);
 
     LBot.set_function("SetData", [this](Bot* bot, std::string const& key, sol::object value) {
         InitializeBotData(bot);

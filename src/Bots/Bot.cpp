@@ -162,3 +162,8 @@ bool Bot::IsLoggedIn()
     return m_isLoggedIn;
 }
 
+uint32 Bot::GetThreadID()
+{
+    return m_thread->m_threadId;
+}
+

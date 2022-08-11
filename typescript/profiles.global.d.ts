@@ -49,6 +49,7 @@ declare class Bot {
     SetData<T>(key: string, value: T): Bot
     HasData(key: string): boolean
     IsLoggedIn(): boolean
+    GetThreadID(): number
 }
 
 

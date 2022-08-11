@@ -67,6 +67,7 @@ public:
     Bot(BotThread* thread, std::string const& username, std::string const& password, std::string const& events, std::string const& authserver);
     std::string const& GetUsername() const;
     std::string const& GetPassword() const;
+    uint32 GetThreadID();
     BotSocket& GetAuthSocket2();
     BotSocket& GetWorldSocket2();
     BotProfile GetEvents();

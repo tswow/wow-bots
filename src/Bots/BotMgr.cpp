@@ -143,7 +143,7 @@ BotMgr* BotMgr::instance()
 
 void BotMgr::StartBot(std::string const& username, std::string const& password, std::string const& events, std::string const& authserver)
 {
-    std::scoped_lock(m_botMutex);
+    std::scoped_lock lock(m_botMutex);
     auto old = m_bots.find(username);
     if (old != m_bots.end())
     {
@@ -174,7 +174,7 @@ void BotMgr::StartBot(std::string const& username, std::string const& password, 
 
 void BotMgr::StopBot(std::string const& username)
 {
-    std::scoped_lock(m_botMutex);
+    std::scoped_lock lock(m_botMutex);
     auto bot = m_bots.find(username);
     if (bot == m_bots.end() || bot->second->m_disconnected)
     {
