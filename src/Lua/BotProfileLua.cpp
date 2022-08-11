@@ -47,6 +47,20 @@ auto RegisterPacket(std::string const& name, sol::state& state)
     type.set_function("WriteDouble", &T::WriteDouble);
     type.set_function("WriteString", &T::WriteString);
     type.set_function("WriteCString", &T::WriteCString);
+
+    type.set_function("ReadUInt8", &T::ReadUInt8);
+    type.set_function("ReadInt8", &T::ReadInt8);
+    type.set_function("ReadUInt16", &T::ReadUInt16);
+    type.set_function("ReadInt16", &T::ReadInt16);
+    type.set_function("ReadUInt32", &T::ReadUInt32);
+    type.set_function("ReadInt32", &T::ReadInt32);
+    type.set_function("ReadUInt64", &T::ReadUInt64);
+    type.set_function("ReadInt64", &T::ReadInt64);
+    type.set_function("ReadFloat", &T::ReadFloat);
+    type.set_function("ReadDouble", &T::ReadDouble);
+    type.set_function("ReadString", &T::ReadString);
+    type.set_function("ReadCString", &T::ReadCString);
+
     type.set_function("WriteBytes", [](T& target, sol::table table) {
         std::vector<uint8_t> vec;
         vec.reserve(table.size());
