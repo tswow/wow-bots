@@ -29,9 +29,15 @@ struct MapCoord
     int y;
     bool operator< (const MapCoord& rhs) const
     {
-        if (rhs.map <= map) return false;
-        if (rhs.x <= x) return false;
-        return y > rhs.y;
+        if (rhs.map != map)
+        {
+            return rhs.map > map;
+        }
+        if (rhs.x != x)
+        {
+            return rhs.x > x;
+        }
+        return y < rhs.y;
     }
 };
 
