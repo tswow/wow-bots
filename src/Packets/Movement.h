@@ -155,30 +155,30 @@ public:
     MovementPacket& SetSplineElevation(float value);
 private:
     Opcodes opcode;
-    uint64 GUID;
-    uint32 flags;
-    uint16 flags2;
-    float x;
-    float y;
-    float z;
-    float o;
-    uint32 time;
+    uint64 GUID = 0;
+    uint32 flags = 0;
+    uint16 flags2 = 0;
+    float x = 0;
+    float y = 0;
+    float z = 0;
+    float o = 0;
+    uint32 time = 0;
 
-    uint64 TransportGUID;
-    float transportX;
-    float transportY;
-    float transportZ;
-    float transportO;
-    int8 transportSeat;
-    uint32 transportTime;
-    uint32 transportTime2;
-    float pitch;
-    uint32 fallTime;
+    uint64 TransportGUID = 0;
+    float transportX = 0;
+    float transportY = 0;
+    float transportZ = 0;
+    float transportO = 0;
+    int8 transportSeat = 0;
+    uint32 transportTime = 0;
+    uint32 transportTime2 = 0;
+    float pitch = 0;
+    uint32 fallTime = 0;
 
-    float jumpZSpeed;
-    float jumpSinAngle;
-    float jumpCosAngle;
-    float jumpXYSpeed;
+    float jumpZSpeed = 0;
+    float jumpSinAngle = 0;
+    float jumpCosAngle = 0;
+    float jumpXYSpeed = 0;
 
-    float splineElevation;
+    float splineElevation = 0;
 };
