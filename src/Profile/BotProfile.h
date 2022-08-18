@@ -54,6 +54,7 @@ public:
     EVENT_STORAGE(OnCloseAuthConnection, Bot& bot, BotMutable<bool> shouldClose, BotMutable<bool> cancel)
     EVENT_STORAGE(OnWorldAuthChallenge, Bot& bot, WorldPacket& packetIn, WorldPacket& packetOut, BotMutable<bool> cancel)
     EVENT_STORAGE(OnWorldAuthResponse, Bot& bot, WorldAuthResponse& response, WorldPacket& packetOut, BotMutable<bool> cancel)
+    EVENT_STORAGE(OnLoggedIn, Bot& bot)
     EVENT_STORAGE(OnWorldPacket, Bot& bot, WorldPacket& packet)
 private:
     BotProfileData(BotProfileMgr* mgr);
@@ -72,6 +73,7 @@ private:
         EXTEND_EVENT(this, parent, OnCloseAuthConnection);
         EXTEND_EVENT(this, parent, OnWorldAuthChallenge);
         EXTEND_EVENT(this, parent, OnWorldAuthResponse);
+        EXTEND_EVENT(this, parent, OnLoggedIn);
     }
     friend class BotProfileMgr;
     friend class BotProfile;
@@ -89,6 +91,7 @@ public:
     EVENT(OnCloseAuthConnection)
     EVENT(OnWorldAuthChallenge)
     EVENT(OnWorldAuthResponse)
+    EVENT(OnLoggedIn)
     ID_EVENT(OnWorldPacket)
     PACKET_EVENTS_DECL
     BotProfile OnUpdateData(std::function<void(Bot& bot, UpdateDataPacket packet)> callback);

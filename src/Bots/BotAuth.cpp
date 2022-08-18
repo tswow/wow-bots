@@ -352,8 +352,12 @@ void Bot::Authenticate()
         AuthPacket pkt(MergeVec(ClientAuthChallenge(GetUsername(), m_authSocket->m_socket.local_endpoint().address().to_v4().to_uint()), GetUsername()));
         return pkt.Send(*this);
     })
-    .then([this]() { return AssertAuthCommand(AuthCommand::LOGON_CHALLENGE, &m_authSocket.value()); })
-    .then([this]() { return m_authSocket->ReadPOD<ServerAuthChallenge>(); })
+    .then([this]() {
+        return AssertAuthCommand(AuthCommand::LOGON_CHALLENGE, &m_authSocket.value());
+    })
+    .then([this]() {
+        return m_authSocket->ReadPOD<ServerAuthChallenge>();
+    })
     .then([this](ServerAuthChallenge serverChallenge) {
         std::string authString = GetUsername() + ":" + GetPassword();
         std::transform(authString.begin(), authString.end(), authString.begin(), [](uint8_t c) {return std::toupper(c); });

@@ -80,6 +80,7 @@ declare class WorldAuthResponse {}
 declare class BotProfile {
     SetBehaviorRoot(node: RootNode<Bot,void,void>)
     OnLoad(callback: (bot: Bot) => void): BotProfile;
+    OnLoggedIn(callback: (bot: Bot) => void): BotProfile;
     OnAuthChallenge(callback: (bot: Bot, packet: AuthPacket, cancel: BotMutable<boolean>) => void): BotProfile
     OnAuthProof(callback: (bot: Bot, challenge: ServerAuthChallenge, packet: AuthPacket, cancel: BotMutable<boolean>) => void): BotProfile
     OnRequestRealms(callback: (bot: Bot, packet: AuthPacket) => void): BotProfile

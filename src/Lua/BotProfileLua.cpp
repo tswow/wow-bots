@@ -98,6 +98,7 @@ void BotProfileLua::LoadLibraries()
     LBotProfile.set_function("OnCloseAuthConnection", &BotProfile::LOnCloseAuthConnection);
     LBotProfile.set_function("OnWorldAuthChallenge", &BotProfile::LOnWorldAuthChallenge);
     LBotProfile.set_function("OnWorldAuthResponse", &BotProfile::LOnWorldAuthResponse);
+    LBotProfile.set_function("OnLoggedIn", &BotProfile::LOnLoggedIn);
     LBotProfile.set_function("OnMovementPacket", [](BotProfile& bot, sol::protected_function callback) {
         bot.OnMovementPacket([=](Bot& bot, MovementPacket packet) {
             callback(bot, packet);
