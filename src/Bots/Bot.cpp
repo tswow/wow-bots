@@ -141,6 +141,7 @@ void Bot::LoadScripts()
 
 void Bot::ConnectionLoop()
 {
+    FIRE(OnLoggedIn, GetEvents(), {}, *this);
     promise::doWhile([this](promise::DeferLoop& loop) {
         if (!m_worldSocket.has_value())
         {
